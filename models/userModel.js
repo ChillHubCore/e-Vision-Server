@@ -1,28 +1,62 @@
 import mongoose from "mongoose";
 
-/**
- * Represents the user schema.
- *
- * @typedef {Object} UserSchema
- * @property {string} name - The name of the user.
- * @property {string} email - The email of the user.
- * @property {string} phone - The phone number of the user.
- * @property {string} password - The password of the user.
- * @property {boolean} isAdmin - Indicates if the user is an admin.
- * @property {Date} createdAt - The timestamp when the user was created.
- * @property {Date} updatedAt - The timestamp when the user was last updated.
- */
 const userSchema = new mongoose.Schema(
   {
-    name: { type: String, required: true },
+    firstName: { type: String, required: true, minLength: 3, maxLength: 255 },
+    lastName: { type: String, required: true, minLength: 3, maxLength: 255 },
+    username: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     phone: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
+    password: { type: String, required: true, minLength: 8, maxLength: 255 },
+    isEmailVerified: { type: Boolean, required: true, default: false },
+    isPhoneVerified: { type: Boolean, required: true, default: false },
+    isCreator: { type: Boolean, default: false, required: true },
     isAdmin: { type: Boolean, default: false, required: true },
+    addresses: [
+      {
+        type: mongoose.Schema.Types.Object,
+        properties: {
+          address: {
+            type: String,
+            minLength: 5,
+            maxLength: 255,
+            trim: true,
+          },
+          city: {
+            type: String,
+            minLength: 2,
+            maxLength: 255,
+            trim: true,
+          },
+          state: {
+            type: String,
+            minLength: 2,
+            maxLength: 2,
+            trim: true,
+          },
+          zipCode: {
+            type: String,
+            minLength: 5,
+            maxLength: 10,
+            trim: true,
+          },
+          isPrimary: {
+            type: Boolean,
+            default: false,
+          },
+        },
+      },
+    ],
+    watchList: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Product",
+      },
+    ],
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 const User = mongoose.model("User", userSchema);

@@ -1,6 +1,6 @@
 # Node JS / Express JS / MongoDB Server Template
 
-# You need a .env file at root of your application containing values below
+## You need a .env file at root of your application containing values below
 
 - ENV=
 - MONGODB_URI=

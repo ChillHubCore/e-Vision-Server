@@ -8,7 +8,7 @@ import mongoose from "mongoose";
 import dotenv from "dotenv";
 import corsMiddleware from "./middlewares/cors.js";
 import userRouter from "./routes/userRoutes.js";
-import { authenticateMiddleware } from "./middlewares/apiKey.js";
+// import { authenticateMiddleware } from "./middlewares/apiKey.js";
 import process from "process";
 
 console.log("Running " + process.env.SERVER_NAME);
@@ -32,7 +32,7 @@ mongoose
 const app = express();
 
 app.use(corsMiddleware);
-app.use(authenticateMiddleware); // Based on Your Need choose cors or authenticateMiddleware (apiKey & apiSecret) or use both if needed!
+// app.use(authenticateMiddleware); // Based on Your Need choose cors or authenticateMiddleware (apiKey & apiSecret) or use both if needed!
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -49,7 +49,7 @@ app.get("/check", (req, res) => {
   res.send("ok");
 });
 
-app.use("/users", userRouter);
+app.use("/user", userRouter);
 
 const fallbackPort = 5000;
 
@@ -61,12 +61,12 @@ const port = process.env.PORT || fallbackPort;
 
 !process.env.PORT &&
   console.log(
-    `Seems Like You Havent Set The PORT in .env file going for the fallback port : ${fallbackPort}!`
+    `Seems Like You Havent Set The PORT in .env file going for the fallback port : ${fallbackPort}!`,
   );
 
 parseInt(port) == 0 &&
   console.log(
-    "Port is 0 Maybe You are In Test Envoirment Consider Changing the Port For Production!"
+    "Port is 0 Maybe You are In Test Envoirment Consider Changing the Port For Production!",
   );
 
 console.log(`Running on port ${port}`);

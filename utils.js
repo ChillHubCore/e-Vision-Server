@@ -21,7 +21,7 @@ export const generateToken = (user) => {
     process.env.JWT_SECRET,
     {
       expiresIn: "7d",
-    }
+    },
   );
 };
 
@@ -60,5 +60,20 @@ export const isAdmin = (req, res, next) => {
     next();
   } else {
     res.status(401).send({ message: "You Are Not The Admin!" });
+  }
+};
+
+/**
+ * Checks if the user is an admin.
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @param {Function} next - The next middleware function.
+ * @returns {void}
+ */
+export const isCreator = (req, res, next) => {
+  if (req.user && req.user.isCreator) {
+    next();
+  } else {
+    res.status(401).send({ message: "You Are Not a Creator!" });
   }
 };

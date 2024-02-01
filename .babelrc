@@ -1,0 +1,10 @@
+/**
+ * Configuration file for Babel.
+ * 
+ * This file specifies the presets to be used by Babel for transpiling JavaScript code.
+ * The "@babel/preset-env" preset is used to enable support for modern JavaScript features
+ * based on the target environment.
+ */
+{
+  "presets": ["@babel/preset-env"]
+}

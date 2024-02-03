@@ -187,10 +187,19 @@ userRouter.post(
      * @property {string} password - The password of the user.
      * use this endpoint to login a user and at the end send them back a auto generated hash token which last in a short period to keep them logged in
      */
-    const user = await User.findOne({ email: req.body.email });
+
+    const SigninFormValues = req.body.values;
+    const validateEmail = emailValidator.parse(SigninFormValues.email);
+
+    if (!validateEmail) {
+      return res.status(400).send({
+        message: validateEmail,
+      });
+    }
+    const user = await User.findOne({ email: SigninFormValues.email });
 
     if (user) {
-      if (bcrypt.compareSync(req.body.password, user.password)) {
+      if (bcrypt.compareSync(SigninFormValues.password, user.password)) {
         res.status(201).send({
           name: user.name,
           isCreator: user.isCreator,

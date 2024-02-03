@@ -7,6 +7,7 @@ import dotenv from "dotenv";
 import {
   emailValidator,
   passwordValidator,
+  phoneValidator,
 } from "../validators/userValidators.js";
 
 dotenv.config();
@@ -77,9 +78,9 @@ userRouter.put(
      * update the user account details and return the updated user object
      */
     const user = await User.findById(req.params.id);
-    const validatePassword = passwordValidator(req.body.password);
-    const validateEmail = emailValidator(req.body.email);
-    const validatePhone = phoneValidator(req.body.phone);
+    const validatePassword = passwordValidator.parse(req.body.password);
+    const validateEmail = emailValidator.parse(req.body.email);
+    const validatePhone = phoneValidator.parse(req.body.phone);
 
     if (!validatePassword)
       return res.status(400).send({
@@ -206,19 +207,11 @@ userRouter.post(
 userRouter.post(
   "/signup",
   expressAsyncHandler(async (req, res) => {
-    /**
-     * Represents a new user.
-     * @typedef {Object} User
-     * @property {string} name - The name of the user.
-     * @property {string} email - The email of the user.
-     * @property {string} phone - The phone of the user.
-     * @property {string} password - The hashed password of the user.
-     * sign a new user into database , store the password in a hash format and return a auto generated hash token which last in a short period to keep them logged in
-     */
+    const SignupFormValues = req.body.values;
 
-    const validatePassword = passwordValidator(req.body.password);
-    const validateEmail = emailValidator(req.body.email);
-    const validatePhone = phoneValidator(req.body.phone);
+    const validatePassword = passwordValidator.parse(SignupFormValues.password);
+    const validateEmail = emailValidator.parse(SignupFormValues.email);
+    const validatePhone = phoneValidator.parse(SignupFormValues.phone);
 
     if (!validatePassword)
       return res.status(400).send({
@@ -235,10 +228,12 @@ userRouter.post(
       });
     }
     const newUser = new User({
-      name: req.body.name,
-      email: req.body.email,
-      phone: req.body.phone,
-      password: bcrypt.hashSync(req.body.password),
+      firstName: SignupFormValues.firstName,
+      lastName: SignupFormValues.lastName,
+      username: SignupFormValues.username,
+      email: SignupFormValues.email,
+      phone: SignupFormValues.phone,
+      password: bcrypt.hashSync(SignupFormValues.password),
     });
     const user = await newUser.save();
     res.status(201).send({

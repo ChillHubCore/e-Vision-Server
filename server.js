@@ -10,6 +10,7 @@ import corsMiddleware from "./middlewares/cors.js";
 import userRouter from "./routes/userRoutes.js";
 // import { authenticateMiddleware } from "./middlewares/apiKey.js";
 import process from "process";
+import { limiter } from "./middlewares/limiter.js";
 
 console.log("Running " + process.env.SERVER_NAME);
 
@@ -31,6 +32,7 @@ mongoose
 
 const app = express();
 
+app.use(limiter);
 app.use(corsMiddleware);
 // app.use(authenticateMiddleware); // Based on Your Need choose cors or authenticateMiddleware (apiKey & apiSecret) or use both if needed!
 

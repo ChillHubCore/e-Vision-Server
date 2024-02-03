@@ -2926,6 +2926,8 @@ __metadata:
     eslint-plugin-security: "npm:^2.1.0"
     express: "npm:^4.18.2"
     express-async-handler: "npm:^1.2.0"
+    express-rate-limit: "npm:^7.1.5"
+    http-errors: "npm:^2.0.0"
     jest: "npm:^29.7.0"
     jsonwebtoken: "npm:^9.0.2"
     mongoose: "npm:^7.6.7"
@@ -3316,6 +3318,15 @@ __metadata:
   version: 1.2.0
   resolution: "express-async-handler@npm:1.2.0"
   checksum: 10c0/0c664965b86d8f6369883080bc7709266215c3c5d7e62ce7b00859e68293720bac409157d4f4ac8859b5fe59608f75b5038ce2b2f683fae356ff9f60874a1341
+  languageName: node
+  linkType: hard
+
+"express-rate-limit@npm:^7.1.5":
+  version: 7.1.5
+  resolution: "express-rate-limit@npm:7.1.5"
+  peerDependencies:
+    express: 4 || 5 || ^5.0.0-beta.1
+  checksum: 10c0/547d5e36113fa71e923a887a5fe90b0af2dbd30260ed6604c31d19b38e4c18e1cdb288b5e3cf131a211632ea715b7e2ba419d7adbfa915db85c52e73f1514932
   languageName: node
   linkType: hard
 
@@ -3800,7 +3811,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"http-errors@npm:2.0.0":
+"http-errors@npm:2.0.0, http-errors@npm:^2.0.0":
   version: 2.0.0
   resolution: "http-errors@npm:2.0.0"
   dependencies:

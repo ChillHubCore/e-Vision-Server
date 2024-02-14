@@ -2,7 +2,7 @@ import express from "express";
 import bcrypt from "bcryptjs";
 import expressAsyncHandler from "express-async-handler";
 import User from "../models/userModel.js";
-import { generateToken, isAdmin, isAuth } from "../utils.js";
+import { generateToken, isAdmin, isAuth, isCreator } from "../utils.js";
 import dotenv from "dotenv";
 import {
   emailValidator,
@@ -128,10 +128,38 @@ userRouter.get(
   isAdmin,
   expressAsyncHandler(async (req, res) => {
     /**
-     * Represents a user object.
-     * get all users
+     * Search for users based on query parameters
      */
-    const users = await User.find({}).select("-password");
+    const { firstName, lastName, username, email, phone, primaryCity, pageNumber } = req.query;
+    const searchQuery = {};
+
+    if (firstName) {
+      searchQuery.firstName = { $regex: firstName, $options: "i" };
+    }
+    if (lastName) {
+      searchQuery.lastName = { $regex: lastName, $options: "i" };
+    }
+    if (username) {
+      searchQuery.username = { $regex: username, $options: "i" };
+    }
+    if (email) {
+      searchQuery.email = { $regex: email, $options: "i" };
+    }
+    if (phone) {
+      searchQuery.phone = { $regex: phone, $options: "i" };
+    }
+    if (primaryCity) {
+      searchQuery["addresses.city"] = { $regex: primaryCity, $options: "i" };
+    }
+
+    const pageSize = 30;
+    const skip = (pageNumber - 1) * pageSize;
+
+    const users = await User.find(searchQuery)
+      .select("-password")
+      .skip(skip)
+      .limit(pageSize);
+
     res.send(users);
   }),
 );
@@ -258,12 +286,12 @@ userRouter.get("/check/auth", isAuth, (req, res) => {
   res.send(true);
 });
 
-userRouter.get("/check/admin", isAuth, (req, res) => {
-  res.send(req.user.isAdmin);
+userRouter.get("/check/admin", isAuth, isAdmin, (req, res) => {
+  res.send(true);
 });
 
-userRouter.get("/check/creator", isAuth, (req, res) => {
-  res.send(req.user.isCreator);
+userRouter.get("/check/creator", isAuth, isCreator, (req, res) => {
+  res.send(true);
 });
 
 export default userRouter;

@@ -17,6 +17,9 @@ export const generateToken = (user) => {
       name: user.name,
       email: user.email,
       isAdmin: user.isAdmin,
+      isCreator: user.isCreator,
+      isEmailVerified: user.isEmailVerified,
+      isPhoneVerified: user.isPhoneVerified,
     },
     process.env.JWT_SECRET,
     {
@@ -56,7 +59,7 @@ export const isAuth = (req, res, next) => {
  * @returns {void}
  */
 export const isAdmin = (req, res, next) => {
-  if (req.user && req.user.isAdmin) {
+  if (req.user.isAdmin) {
     next();
   } else {
     res.status(401).send({ message: "You Are Not The Admin!" });

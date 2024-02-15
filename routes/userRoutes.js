@@ -19,46 +19,44 @@ userRouter.post(
   isAuth,
   isAdmin,
   expressAsyncHandler(async (req, res) => {
-    /**
-     * Represents a new user.
-     * @typedef {Object} User
-     * @property {string} name - The name of the user.
-     * @property {string} email - The email of the user.
-     * @property {string} phone - The phone of the user.
-     * @property {Array} addresses - The addresses of the user.
-     * @property {string} password - The hashed password of the user.
-     * create a new user and return a auto generated hash token which lasts for a short period to keep them logged in
-     */
-
-    const validatePassword = passwordValidator(req.body.password);
-    const validateEmail = emailValidator(req.body.email);
-    const validatePhone = phoneValidator(req.body.phone);
+    const CreateUserFormValues = req.body.values;
+    const validatePassword = passwordValidator.parse(
+      CreateUserFormValues.password,
+    );
+    const validateEmail = emailValidator.parse(CreateUserFormValues.email);
+    const validatePhone = phoneValidator.parse(CreateUserFormValues.phone);
 
     if (!validatePassword)
-      return res.status(400).send({
+      return res.status(400).json({
         message: validatePassword,
       });
     if (!validateEmail) {
-      return res.status(400).send({
+      return res.status(400).json({
         message: validateEmail,
       });
     }
     if (!validatePhone) {
-      return res.status(400).send({
+      return res.status(400).json({
         message: validatePhone,
       });
     }
+
     const newUser = new User({
-      name: req.body.name,
-      email: req.body.email,
-      phone: req.body.phone,
-      addresses: req.body.addresses,
-      password: bcrypt.hashSync(req.body.password),
+      firstName: CreateUserFormValues.firstName,
+      lastName: CreateUserFormValues.lastName,
+      email: CreateUserFormValues.email,
+      phone: CreateUserFormValues.phone,
+      username: CreateUserFormValues.username,
+      isAdmin: CreateUserFormValues.isAdmin,
+      isCreator: CreateUserFormValues.isCreator,
+      isEmailVerified: CreateUserFormValues.isEmailVerified,
+      isPhoneVerified: CreateUserFormValues.isPhoneVerified,
+      password: bcrypt.hashSync(CreateUserFormValues.password),
     });
     const user = await newUser.save();
-    res.status(201).send({
-      name: user.name,
-      token: generateToken(user),
+    res.status(201).json({
+      message: "User Created",
+      user: user,
     });
   }),
 );
@@ -68,56 +66,55 @@ userRouter.put(
   isAuth,
   isAdmin,
   expressAsyncHandler(async (req, res) => {
-    /**
-     * Represents a user object.
-     * @typedef {Object} User
-     * @property {string} name - The name of the user.
-     * @property {string} email - The email of the user.
-     * @property {string} phone - The phone of the user.
-     * @property {string} password - The hashed password of the user.
-     * update the user account details and return the updated user object
-     */
     const user = await User.findById(req.params.id);
-    const validatePassword = passwordValidator.parse(req.body.password);
-    const validateEmail = emailValidator.parse(req.body.email);
-    const validatePhone = phoneValidator.parse(req.body.phone);
+    const EditUserFormValues = req.body.values;
 
-    if (!validatePassword)
-      return res.status(400).send({
-        message: validatePassword,
-      });
-
-    if (!validateEmail) {
-      return res.status(400).send({
-        message: validateEmail,
-      });
+    if (EditUserFormValues.password) {
+      const validatePassword = passwordValidator.parse(
+        EditUserFormValues.password,
+      );
+      if (!validatePassword)
+        return res.status(400).json({
+          message: validatePassword,
+        });
     }
-    if (!validatePhone) {
-      return res.status(400).send({
-        message: validatePhone,
-      });
+
+    if (EditUserFormValues.email) {
+      {
+        const validateEmail = emailValidator.parse(EditUserFormValues.email);
+        if (!validateEmail)
+          return res.status(400).json({
+            message: validateEmail,
+          });
+      }
+    }
+    if (EditUserFormValues.phone) {
+      const validatePhone = phoneValidator.parse(EditUserFormValues.phone);
+      if (!validatePhone)
+        return res.status(400).json({
+          message: validatePhone,
+        });
     }
 
     if (user) {
-      user.name = req.body.name || user.name;
-      user.email = req.body.email || user.email;
-      user.phone = req.body.phone || user.phone;
-      user.addresses = req.body.addresses || user.addresses;
+      user.name = EditUserFormValues.name || user.name;
+      user.email = EditUserFormValues.email || user.email;
+      user.phone = EditUserFormValues.phone || user.phone;
+      user.isAdmin = EditUserFormValues.isAdmin || user.isAdmin;
+      user.isCreator = EditUserFormValues.isCreator || user.isCreator;
 
-      if (req.body.password) {
-        user.password = bcrypt.hashSync(req.body.password);
+      if (
+        EditUserFormValues.password &&
+        EditUserFormValues.password.trim() !== ""
+      ) {
+        user.password = bcrypt.hashSync(EditUserFormValues.password);
       }
 
       const updatedUser = await user.save();
 
-      res.send({
-        name: updatedUser.name,
-        email: updatedUser.email,
-        phone: updatedUser.phone,
-        token: generateToken(updatedUser),
-      });
+      res.status(200).json({ message: "User updated", user: updatedUser });
     } else {
-      res.status(404).send({ message: "User not found" });
+      res.status(404).json({ message: "User not found" });
     }
   }),
 );
@@ -130,7 +127,16 @@ userRouter.get(
     /**
      * Search for users based on query parameters
      */
-    const { firstName, lastName, username, email, phone, primaryCity, pageNumber } = req.query;
+    const {
+      firstName,
+      lastName,
+      username,
+      email,
+      phone,
+      primaryCity,
+      pageNumber,
+      limit,
+    } = req.query;
     const searchQuery = {};
 
     if (firstName) {
@@ -148,19 +154,18 @@ userRouter.get(
     if (phone) {
       searchQuery.phone = { $regex: phone, $options: "i" };
     }
-    if (primaryCity) {
-      searchQuery["addresses.city"] = { $regex: primaryCity, $options: "i" };
-    }
 
-    const pageSize = 30;
+
+    const pageSize = limit ? Number(limit) : 30;
     const skip = (pageNumber - 1) * pageSize;
 
+    const totalUsers = await User.countDocuments({});
     const users = await User.find(searchQuery)
       .select("-password")
       .skip(skip)
       .limit(pageSize);
 
-    res.send(users);
+    res.json({ users: users, length: totalUsers });
   }),
 );
 
@@ -175,9 +180,9 @@ userRouter.get(
     const user = await User.findById(req.params.id).select("-password");
 
     if (user) {
-      res.send(user);
+      res.json(user);
     } else {
-      res.status(404).send({ message: "User not found" });
+      res.status(404).json({ message: "User not found" });
     }
   }),
 );
@@ -193,14 +198,14 @@ userRouter.delete(
     const user = await User.findById(req.params.id);
 
     if (user) {
-      if (user.isAdmin) {
-        res.status(403).send({ message: "Admin user cannot be deleted" });
+      if (user.isAdmin === true) {
+        res.status(403).json({ message: "Admin user cannot be deleted" });
       } else {
-        await user.remove();
-        res.send({ message: "User deleted" });
+        await User.deleteOne({ _id: req.params.id });
+        res.json({ message: "User deleted" });
       }
     } else {
-      res.status(404).send({ message: "User not found" });
+      res.status(404).json({ message: "User not found" });
     }
   }),
 );
@@ -220,7 +225,7 @@ userRouter.post(
     const validateEmail = emailValidator.parse(SigninFormValues.email);
 
     if (!validateEmail) {
-      return res.status(400).send({
+      return res.status(400).json({
         message: validateEmail,
       });
     }
@@ -228,7 +233,7 @@ userRouter.post(
 
     if (user) {
       if (bcrypt.compareSync(SigninFormValues.password, user.password)) {
-        res.status(201).send({
+        res.status(201).json({
           name: user.name,
           isCreator: user.isCreator,
           isAdmin: user.isAdmin,
@@ -237,7 +242,7 @@ userRouter.post(
         return;
       }
     }
-    res.status(401).send({ message: "Email or Password is Wrong!" });
+    res.status(401).json({ message: "Email or Password is Wrong!" });
   }),
 );
 
@@ -251,16 +256,16 @@ userRouter.post(
     const validatePhone = phoneValidator.parse(SignupFormValues.phone);
 
     if (!validatePassword)
-      return res.status(400).send({
+      return res.status(400).json({
         message: validatePassword,
       });
     if (!validateEmail) {
-      return res.status(400).send({
+      return res.status(400).json({
         message: validateEmail,
       });
     }
     if (!validatePhone) {
-      return res.status(400).send({
+      return res.status(400).json({
         message: validatePhone,
       });
     }
@@ -273,7 +278,7 @@ userRouter.post(
       password: bcrypt.hashSync(SignupFormValues.password),
     });
     const user = await newUser.save();
-    res.status(201).send({
+    res.status(201).json({
       name: user.name,
       isCreator: user.isCreator,
       isAdmin: user.isAdmin,

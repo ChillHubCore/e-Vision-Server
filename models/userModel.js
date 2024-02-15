@@ -24,41 +24,6 @@ const userSchema = new mongoose.Schema(
     isPhoneVerified: { type: Boolean, required: true, default: false },
     isCreator: { type: Boolean, default: false, required: true },
     isAdmin: { type: Boolean, default: false, required: true },
-    addresses: [
-      {
-        type: mongoose.Schema.Types.Object,
-        properties: {
-          address: {
-            type: String,
-            minLength: 5,
-            maxLength: 255,
-            trim: true,
-          },
-          city: {
-            type: String,
-            minLength: 2,
-            maxLength: 255,
-            trim: true,
-          },
-          state: {
-            type: String,
-            minLength: 2,
-            maxLength: 2,
-            trim: true,
-          },
-          zipCode: {
-            type: String,
-            minLength: 5,
-            maxLength: 10,
-            trim: true,
-          },
-          isPrimary: {
-            type: Boolean,
-            default: false,
-          },
-        },
-      },
-    ],
     watchList: [
       {
         type: mongoose.Schema.Types.ObjectId,

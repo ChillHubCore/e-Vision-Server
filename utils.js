@@ -74,7 +74,7 @@ export const isAdmin = (req, res, next) => {
  * @returns {void}
  */
 export const isCreator = (req, res, next) => {
-  if (req.user && req.user.isCreator) {
+  if (req.user.isCreator) {
     next();
   } else {
     res.status(401).send({ message: "You Are Not a Creator!" });

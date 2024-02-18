@@ -97,14 +97,45 @@ userRouter.put(
     }
 
     if (user) {
-      user.name = EditUserFormValues.name || user.name;
-      user.email = EditUserFormValues.email || user.email;
-      user.phone = EditUserFormValues.phone || user.phone;
-      user.isAdmin = EditUserFormValues.isAdmin || user.isAdmin;
-      user.isCreator = EditUserFormValues.isCreator || user.isCreator;
+      user.firstName =
+        EditUserFormValues.firstName !== undefined
+          ? EditUserFormValues.firstName
+          : user.firstName;
+      user.lastName =
+        EditUserFormValues.lastName !== undefined
+          ? EditUserFormValues.lastName
+          : user.lastName;
+      user.email =
+        EditUserFormValues.email !== undefined
+          ? EditUserFormValues.email
+          : user.email;
+      user.phone =
+        EditUserFormValues.phone !== undefined
+          ? EditUserFormValues.phone
+          : user.phone;
+      user.username =
+        EditUserFormValues.username !== undefined
+          ? EditUserFormValues.username
+          : user.username;
+      user.isAdmin =
+        EditUserFormValues.isAdmin !== undefined
+          ? EditUserFormValues.isAdmin
+          : user.isAdmin;
+      user.isCreator =
+        EditUserFormValues.isCreator !== undefined
+          ? EditUserFormValues.isCreator
+          : user.isCreator;
+      user.isEmailVerified =
+        EditUserFormValues.isEmailVerified !== undefined
+          ? EditUserFormValues.isEmailVerified
+          : user.isEmailVerified;
+      user.isPhoneVerified =
+        EditUserFormValues.isPhoneVerified !== undefined
+          ? EditUserFormValues.isPhoneVerified
+          : user.isPhoneVerified;
 
       if (
-        EditUserFormValues.password &&
+        EditUserFormValues.password !== undefined &&
         EditUserFormValues.password.trim() !== ""
       ) {
         user.password = bcrypt.hashSync(EditUserFormValues.password);
@@ -133,11 +164,18 @@ userRouter.get(
       username,
       email,
       phone,
-      primaryCity,
       pageNumber,
       limit,
+      timeCreatedGTE,
+      timeCreatedLTE,
+      desc,
     } = req.query;
     const searchQuery = {};
+
+    console.log(
+      typeof req.query.timeCreatedGTE,
+      typeof req.query.timeCreatedGTE,
+    );
 
     if (firstName) {
       searchQuery.firstName = { $regex: firstName, $options: "i" };
@@ -154,7 +192,12 @@ userRouter.get(
     if (phone) {
       searchQuery.phone = { $regex: phone, $options: "i" };
     }
-
+    if (timeCreatedGTE) {
+      searchQuery.createdAt = { $gte: new Date(timeCreatedGTE) };
+    }
+    if (timeCreatedLTE) {
+      searchQuery.createdAt = { $lte: new Date(timeCreatedLTE) };
+    }
 
     const pageSize = limit ? Number(limit) : 30;
     const skip = (pageNumber - 1) * pageSize;
@@ -163,7 +206,8 @@ userRouter.get(
     const users = await User.find(searchQuery)
       .select("-password")
       .skip(skip)
-      .limit(pageSize);
+      .limit(pageSize)
+      .sort({ createdAt: desc === "true" ? -1 : 1 });
 
     res.json({ users: users, length: totalUsers });
   }),

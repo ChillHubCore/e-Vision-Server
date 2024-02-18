@@ -11,6 +11,7 @@ import userRouter from "./routes/userRoutes.js";
 // import { authenticateMiddleware } from "./middlewares/apiKey.js";
 import process from "process";
 import { limiter } from "./middlewares/limiter.js";
+import productRouter from "./routes/productRoutes.js";
 
 console.log("Running " + process.env.SERVER_NAME);
 
@@ -52,6 +53,7 @@ app.get("/check", (req, res) => {
 });
 
 app.use("/user", userRouter);
+app.use("/product", productRouter);
 
 const fallbackPort = 5000;
 

@@ -19,10 +19,7 @@ productRouter.post(
       name: CreateProductFormValues.name,
       slug: CreateProductFormValues.slug,
       category: CreateProductFormValues.category,
-      description: {
-        short: CreateProductFormValues.shortDescription,
-        full: CreateProductFormValues.fullDescription,
-      },
+      description: CreateProductFormValues.description,
       variants: CreateProductFormValues.variants,
       creator: req.user._id,
       sharedDetails: CreateProductFormValues.sharedDetails,

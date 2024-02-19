@@ -12,6 +12,7 @@ import userRouter from "./routes/userRoutes.js";
 import process from "process";
 import { limiter } from "./middlewares/limiter.js";
 import productRouter from "./routes/productRoutes.js";
+import uploadRouter from "./routes/uploadRoutes.js";
 
 console.log("Running " + process.env.SERVER_NAME);
 
@@ -52,6 +53,7 @@ app.get("/check", (req, res) => {
   res.send("ok");
 });
 
+app.use("/upload", uploadRouter);
 app.use("/user", userRouter);
 app.use("/product", productRouter);
 

@@ -1,33 +1,18 @@
 import mongoose from "mongoose";
 
-const detailSchema = new mongoose.Schema({
-  key: { type: String, required: true, minlength: 3, maxlength: 255 },
-  value: { type: String, required: true, minlength: 3, maxlength: 255 },
-});
-
-const reviewSchema = new mongoose.Schema(
-  {
-    rating: { type: Number, required: true, min: 0, max: 5 },
-    comment: { type: String, minlength: 3, maxlength: 255 },
-    user: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // User who submitted the review
-  },
-  { timestamps: true },
-);
-
 const variantSchema = new mongoose.Schema({
   images: { type: [String], required: true }, // Array of product images
-  details: [detailSchema], // Array of variant attributes, e.g., "color", "size", "material"
+  details: [
+    {
+      key: { type: String, required: true, minlength: 3, maxlength: 255 },
+      value: { type: String, required: true, minlength: 3, maxlength: 255 },
+    },
+  ], // Array of variant attributes, e.g., "color", "size", "material"
   SKU: { type: String, required: true, unique: true }, // Stock Keeping Unit
   price: {
     type: {
       regularPrice: { type: Number, required: true }, // Regular price
       discountedPrice: Number, // Discounted price if available
-      specialOffers: [
-        {
-          name: String, // Description of special offers
-          price: Number, // Price for the special offer
-        },
-      ],
     },
     required: true,
   },
@@ -39,7 +24,15 @@ const variantSchema = new mongoose.Schema({
     enum: [true, false],
   },
   rating: { type: Number, required: true, default: 0 }, // Average review rating
-  reviews: [reviewSchema],
+  reviews: [
+    {
+      rating: { type: Number, required: true, min: 0, max: 5 },
+      comment: { type: String, minlength: 3, maxlength: 255 },
+      user: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // User who submitted the review
+      createdAt: { type: Date, required: true, default: Date.now },
+      updatedAt: { type: Date, required: true, default: Date.now },
+    },
+  ],
 });
 
 const productSchema = new mongoose.Schema(
@@ -68,7 +61,12 @@ const productSchema = new mongoose.Schema(
       required: true,
     },
     sharedDetails: {
-      type: [detailSchema],
+      type: [
+        {
+          key: { type: String, required: true, minlength: 3, maxlength: 255 },
+          value: { type: String, required: true, minlength: 3, maxlength: 255 },
+        },
+      ],
       required: true,
     },
   },

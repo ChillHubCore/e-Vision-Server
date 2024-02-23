@@ -172,11 +172,6 @@ userRouter.get(
     } = req.query;
     const searchQuery = {};
 
-    console.log(
-      typeof req.query.timeCreatedGTE,
-      typeof req.query.timeCreatedGTE,
-    );
-
     if (firstName) {
       searchQuery.firstName = { $regex: firstName, $options: "i" };
     }
@@ -342,5 +337,63 @@ userRouter.get("/check/admin", isAuth, isAdmin, (req, res) => {
 userRouter.get("/check/creator", isAuth, isCreator, (req, res) => {
   res.send(true);
 });
+
+userRouter.post(
+  "/:id/status",
+  isAuth,
+  isAdmin,
+  expressAsyncHandler(async (req, res) => {
+    const user = await User.findById(req.params.id);
+    const status = req.body.status;
+    if (user) {
+      user.status.push(status);
+      const updatedUser = await user.save();
+      res
+        .status(200)
+        .json({ message: "User status updated", user: updatedUser });
+    } else {
+      res.status(404).json({ message: "User not found" });
+    }
+  }),
+);
+
+userRouter.put(
+  "/:id/status/:statusId",
+  isAuth,
+  isAdmin,
+  expressAsyncHandler(async (req, res) => {
+    const user = await User.findById(req.params.id);
+    const status = req.body.status;
+    if (user) {
+      user.status.id(req.params.statusId).value = status.value;
+      user.status.id(req.params.statusId).description = status.description;
+      const updatedUser = await user.save();
+      res
+        .status(200)
+        .json({ message: "User status updated", user: updatedUser });
+    } else {
+      res.status(404).json({ message: "User not found" });
+    }
+  }),
+);
+
+userRouter.post(
+  "/:id/notifications",
+  isAuth,
+  isAdmin,
+  expressAsyncHandler(async (req, res) => {
+    const user = await User.findById(req.params.id);
+    const notification = req.body.notification;
+    if (user) {
+      user.notifications.push(notification);
+      const updatedUser = await user.save();
+      res.status(200).json({
+        message: "User notification updated",
+      });
+    } else {
+      res.status(404).json({ message: "User not found" });
+    }
+  }),
+);
 
 export default userRouter;

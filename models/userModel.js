@@ -1,5 +1,44 @@
 import mongoose from "mongoose";
 
+const notificationSchema = new mongoose.Schema(
+  {
+    title: {
+      type: String,
+      required: true,
+      unique: true,
+      minLength: 3,
+      maxLength: 255,
+    },
+    message: {
+      type: String,
+      required: true,
+      unique: true,
+      minLength: 3,
+      maxLength: 2047,
+    },
+    dateRead: Date,
+  },
+  {
+    timestamps: true,
+  },
+);
+
+const userStatusSchema = new mongoose.Schema(
+  {
+    value: { type: String, required: true, minLength: 3, maxLength: 255 },
+    description: {
+      type: String,
+      required: true,
+      minLength: 3,
+      maxLength: 2047,
+    },
+    date: Date,
+  },
+  {
+    timestamps: true,
+  },
+);
+
 const userSchema = new mongoose.Schema(
   {
     firstName: { type: String, required: true, minLength: 3, maxLength: 255 },
@@ -30,6 +69,14 @@ const userSchema = new mongoose.Schema(
         ref: "Product",
       },
     ],
+    status: {
+      type: [userStatusSchema],
+      default: [],
+    },
+    notifications: {
+      type: [notificationSchema],
+      default: [],
+    },
   },
   {
     timestamps: true,

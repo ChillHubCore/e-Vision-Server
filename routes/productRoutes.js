@@ -18,6 +18,7 @@ productRouter.post(
     const newProduct = new Product({
       name: CreateProductFormValues.name,
       slug: CreateProductFormValues.slug,
+      brand: CreateProductFormValues.brand,
       category: CreateProductFormValues.category,
       description: CreateProductFormValues.description,
       variants: CreateProductFormValues.variants,

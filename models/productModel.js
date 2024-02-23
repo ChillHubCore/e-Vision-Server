@@ -45,6 +45,7 @@ const productSchema = new mongoose.Schema(
       minlength: 3,
       maxlength: 1023,
     },
+    brand: { type: String, required: true, minlength: 3, maxlength: 255 },
     category: { type: String, required: true, minlength: 3, maxlength: 255 },
     description: {
       type: {

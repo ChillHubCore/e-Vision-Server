@@ -42,11 +42,11 @@ userRouter.post(
     }
 
     const newUser = new User({
-      firstName: CreateUserFormValues.firstName,
-      lastName: CreateUserFormValues.lastName,
-      email: CreateUserFormValues.email,
-      phone: CreateUserFormValues.phone,
-      username: CreateUserFormValues.username,
+      firstName: CreateUserFormValues.firstName.trim(),
+      lastName: CreateUserFormValues.lastName.trim(),
+      email: CreateUserFormValues.email.trim(),
+      phone: CreateUserFormValues.phone.trim(),
+      username: CreateUserFormValues.username.trim(),
       isAdmin: CreateUserFormValues.isAdmin,
       isCreator: CreateUserFormValues.isCreator,
       isEmailVerified: CreateUserFormValues.isEmailVerified,
@@ -99,23 +99,23 @@ userRouter.put(
     if (user) {
       user.firstName =
         EditUserFormValues.firstName !== undefined
-          ? EditUserFormValues.firstName
+          ? EditUserFormValues.firstName.trim()
           : user.firstName;
       user.lastName =
         EditUserFormValues.lastName !== undefined
-          ? EditUserFormValues.lastName
+          ? EditUserFormValues.lastName.trim()
           : user.lastName;
       user.email =
         EditUserFormValues.email !== undefined
-          ? EditUserFormValues.email
+          ? EditUserFormValues.email.trim()
           : user.email;
       user.phone =
         EditUserFormValues.phone !== undefined
-          ? EditUserFormValues.phone
+          ? EditUserFormValues.phone.trim()
           : user.phone;
       user.username =
         EditUserFormValues.username !== undefined
-          ? EditUserFormValues.username
+          ? EditUserFormValues.username.trim()
           : user.username;
       user.isAdmin =
         EditUserFormValues.isAdmin !== undefined
@@ -168,7 +168,7 @@ userRouter.get(
       limit,
       timeCreatedGTE,
       timeCreatedLTE,
-      desc,
+      desc = "false",
     } = req.query;
     const searchQuery = {};
 
@@ -291,8 +291,8 @@ userRouter.post(
     const SignupFormValues = req.body.values;
 
     const validatePassword = passwordValidator.parse(SignupFormValues.password);
-    const validateEmail = emailValidator.parse(SignupFormValues.email);
-    const validatePhone = phoneValidator.parse(SignupFormValues.phone);
+    const validateEmail = emailValidator.parse(SignupFormValues.email.trim());
+    const validatePhone = phoneValidator.parse(SignupFormValues.phone.trim());
 
     if (!validatePassword)
       return res.status(400).json({
@@ -309,11 +309,11 @@ userRouter.post(
       });
     }
     const newUser = new User({
-      firstName: SignupFormValues.firstName,
-      lastName: SignupFormValues.lastName,
-      username: SignupFormValues.username,
-      email: SignupFormValues.email,
-      phone: SignupFormValues.phone,
+      firstName: SignupFormValues.firstName.trim(),
+      lastName: SignupFormValues.lastName.trim(),
+      username: SignupFormValues.username.trim(),
+      email: SignupFormValues.email.trim(),
+      phone: SignupFormValues.phone.trim(),
       password: bcrypt.hashSync(SignupFormValues.password),
     });
     const user = await newUser.save();

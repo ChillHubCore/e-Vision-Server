@@ -3,6 +3,17 @@ import mongoose from "mongoose";
 const appSchema = new mongoose.Schema(
   {
     name: { type: String, required: true, minLength: 3, maxLength: 255 },
+    primaryCurrency: {
+      type: String,
+      required: true,
+      minLength: 3,
+      maxLength: 255,
+    },
+    extraCurrenciesSupported: {
+      type: [{ type: String, minLength: 3, maxLength: 255 }],
+      required: true,
+      default: [],
+    },
     description: {
       type: String,
       required: true,
@@ -15,7 +26,11 @@ const appSchema = new mongoose.Schema(
     },
 
     version: { type: String, required: true, minLength: 3, maxLength: 255 },
-    userStatus: { type: [{ type: String, minLength: 3, maxLength: 255 }] },
+    userStatus: {
+      type: [{ type: String, minLength: 3, maxLength: 255 }],
+      required: true,
+      default: [],
+    },
     contactAddresses: {
       type: {
         physical: {
@@ -43,6 +58,16 @@ const appSchema = new mongoose.Schema(
           maxLength: 255,
         },
       },
+    },
+    postalOptions: {
+      type: [{ type: String, minLength: 3, maxLength: 255 }],
+      required: true,
+      default: [],
+    },
+    paymentOptions: {
+      type: [{ type: String, minLength: 3, maxLength: 255 }],
+      required: true,
+      default: [],
     },
   },
   {

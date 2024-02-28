@@ -51,6 +51,12 @@ const userSchema = new mongoose.Schema(
       minLength: 3,
       maxLength: 255,
     },
+    countryCode: {
+      type: String,
+      required: true,
+      minLength: 3,
+      maxLength: 255,
+    },
     phone: {
       type: String,
       required: true,

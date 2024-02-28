@@ -45,6 +45,7 @@ userRouter.post(
       firstName: CreateUserFormValues.firstName.trim(),
       lastName: CreateUserFormValues.lastName.trim(),
       email: CreateUserFormValues.email.trim(),
+      countryCode: CreateUserFormValues.countryCode.trim(),
       phone: CreateUserFormValues.phone.trim(),
       username: CreateUserFormValues.username.trim(),
       isAdmin: CreateUserFormValues.isAdmin,
@@ -109,6 +110,10 @@ userRouter.put(
         EditUserFormValues.email !== undefined
           ? EditUserFormValues.email.trim()
           : user.email;
+      user.countryCode =
+        EditUserFormValues.countryCode !== undefined
+          ? EditUserFormValues.countryCode.trim()
+          : user.countryCode;
       user.phone =
         EditUserFormValues.phone !== undefined
           ? EditUserFormValues.phone.trim()
@@ -163,6 +168,7 @@ userRouter.get(
       lastName,
       username,
       email,
+      countryCode,
       phone,
       pageNumber,
       limit,
@@ -183,6 +189,9 @@ userRouter.get(
     }
     if (email) {
       searchQuery.email = { $regex: email, $options: "i" };
+    }
+    if (countryCode) { 
+      searchQuery.countryCode = { $regex: countryCode, $options: "i" };
     }
     if (phone) {
       searchQuery.phone = { $regex: phone, $options: "i" };
@@ -313,6 +322,7 @@ userRouter.post(
       lastName: SignupFormValues.lastName.trim(),
       username: SignupFormValues.username.trim(),
       email: SignupFormValues.email.trim(),
+      countryCode: SignupFormValues.countryCode.trim(),
       phone: SignupFormValues.phone.trim(),
       password: bcrypt.hashSync(SignupFormValues.password),
     });

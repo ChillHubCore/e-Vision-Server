@@ -58,6 +58,7 @@ const appSchema = new mongoose.Schema(
           maxLength: 255,
         },
       },
+      required: true,
     },
     postalOptions: {
       type: [{ type: String, minLength: 3, maxLength: 255 }],

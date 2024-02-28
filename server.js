@@ -14,6 +14,7 @@ import { limiter } from "./middlewares/limiter.js";
 import productRouter from "./routes/productRoutes.js";
 import uploadRouter from "./routes/uploadRoutes.js";
 import appRouter from "./routes/appRoutes.js";
+import orderRouter from "./routes/orderRoutes.js";
 
 console.log("Running " + process.env.SERVER_NAME);
 
@@ -58,6 +59,7 @@ app.use("/upload", uploadRouter);
 app.use("/user", userRouter);
 app.use("/product", productRouter);
 app.use("/app", appRouter);
+app.use("/order", orderRouter);
 
 const fallbackPort = 5000;
 

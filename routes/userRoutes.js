@@ -190,7 +190,7 @@ userRouter.get(
     if (email) {
       searchQuery.email = { $regex: email, $options: "i" };
     }
-    if (countryCode) { 
+    if (countryCode) {
       searchQuery.countryCode = { $regex: countryCode, $options: "i" };
     }
     if (phone) {

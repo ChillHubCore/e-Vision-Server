@@ -1,7 +1,7 @@
 import express from "express";
 import expressAsyncHandler from "express-async-handler";
 import Product from "../models/productModel.js";
-import { isAdmin, isAuth, isCreator } from "../utils.js";
+import { isAuth, isCreator } from "../utils.js";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -77,11 +77,9 @@ productRouter.put(
             .status(200)
             .send({ message: "Product updated", product: updatedProduct });
         } else {
-          res
-            .status(403)
-            .send({
-              message: "You are not authorized to update this product.",
-            });
+          res.status(403).send({
+            message: "You are not authorized to update this product.",
+          });
         }
       } else {
         res.status(404).send({ message: "Product not found" });
@@ -185,11 +183,9 @@ productRouter.delete(
           await Product.deleteOne({ _id: req.params.id });
           res.status(200).send({ message: "Product deleted successfully." });
         } else {
-          res
-            .status(403)
-            .send({
-              message: "You are not authorized to delete this product.",
-            });
+          res.status(403).send({
+            message: "You are not authorized to delete this product.",
+          });
         }
       } else {
         res.status(404).send({ message: "Product not found" });

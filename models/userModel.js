@@ -54,15 +54,11 @@ const userSchema = new mongoose.Schema(
     countryCode: {
       type: String,
       required: true,
-      minLength: 3,
-      maxLength: 255,
     },
     phone: {
       type: String,
       required: true,
       unique: true,
-      minLength: 3,
-      maxLength: 255,
     },
     password: { type: String, required: true },
     isEmailVerified: { type: Boolean, required: true, default: false },

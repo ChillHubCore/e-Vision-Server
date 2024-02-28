@@ -24,8 +24,11 @@ const appSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-
-    version: { type: String, required: true, minLength: 3, maxLength: 255 },
+    version: {
+      type: Number,
+      required: true,
+      unique: true,
+    },
     userStatus: {
       type: [{ type: String, minLength: 3, maxLength: 255 }],
       required: true,
@@ -45,11 +48,13 @@ const appSchema = new mongoose.Schema(
           minLength: 3,
           maxLength: 255,
         },
+        countryCode: {
+          type: String,
+          required: true,
+        },
         phone: {
           type: String,
           required: true,
-          minLength: 3,
-          maxLength: 255,
         },
         postalCode: {
           type: String,
@@ -57,6 +62,7 @@ const appSchema = new mongoose.Schema(
           minLength: 3,
           maxLength: 255,
         },
+        _id: false,
       },
       required: true,
     },

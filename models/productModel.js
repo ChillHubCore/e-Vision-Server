@@ -13,6 +13,7 @@ const variantSchema = new mongoose.Schema({
     type: {
       regularPrice: { type: Number, required: true }, // Regular price
       discountedPrice: Number, // Discounted price if available
+      _id: false,
     },
     required: true,
   },

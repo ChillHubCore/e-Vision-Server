@@ -24,6 +24,7 @@ appRouter.post(
       extraCurrenciesSupported,
       postalOptions,
       paymentOptions,
+      taxRate,
     } = req.body.values;
 
     const highestVersion = await App.findOne({}, {}, { sort: { version: -1 } });
@@ -40,6 +41,7 @@ appRouter.post(
       contactAddresses,
       postalOptions,
       paymentOptions,
+      taxRate,
     });
 
     const validatedApp = appValidator.safeParse(app);

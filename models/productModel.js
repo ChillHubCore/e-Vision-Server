@@ -1,40 +1,46 @@
 import mongoose from "mongoose";
 
-const variantSchema = new mongoose.Schema({
-  images: { type: [String], required: true }, // Array of product images
-  details: [
-    {
-      key: { type: String, required: true, minlength: 3, maxlength: 255 },
-      value: { type: String, required: true, minlength: 3, maxlength: 255 },
+const variantSchema = new mongoose.Schema(
+  {
+    images: { type: [String], required: true }, // Array of product images
+    details: [
+      {
+        key: { type: String, required: true, minlength: 3, maxlength: 255 },
+        value: { type: String, required: true, minlength: 3, maxlength: 255 },
+      },
+    ], // Array of variant attributes, e.g., "color", "size", "material"
+    SKU: { type: String, required: true, unique: true }, // Stock Keeping Unit
+    price: {
+      type: {
+        regularPrice: { type: Number, required: true }, // Regular price
+        discountedPrice: { type: Number, required: false, default: false }, // Discounted price if available
+        _id: false,
+      },
+      required: true,
     },
-  ], // Array of variant attributes, e.g., "color", "size", "material"
-  SKU: { type: String, required: true, unique: true }, // Stock Keeping Unit
-  price: {
-    type: {
-      regularPrice: { type: Number, required: true }, // Regular price
-      discountedPrice: Number, // Discounted price if available
-      _id: false,
+    inStock: { type: Number, required: true },
+    soldAmount: { type: Number, required: true, default: 0 },
+    availability: {
+      type: Boolean,
+      required: true,
+      enum: [true, false],
     },
-    required: true,
+    rating: { type: Number, required: true, default: 0 }, // Average review rating
+    reviews: [
+      {
+        rating: { type: Number, required: true, min: 0, max: 5 },
+        comment: { type: String, minlength: 3, maxlength: 255 },
+        user: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // User who submitted the review
+        createdAt: { type: Date, required: true, default: Date.now },
+        updatedAt: { type: Date, required: true, default: Date.now },
+      },
+    ],
   },
-  inStock: { type: Number, required: true },
-  soldAmount: { type: Number, required: true, default: 0 },
-  availability: {
-    type: Boolean,
-    required: true,
-    enum: [true, false],
+  {
+    autoCreate: true,
   },
-  rating: { type: Number, required: true, default: 0 }, // Average review rating
-  reviews: [
-    {
-      rating: { type: Number, required: true, min: 0, max: 5 },
-      comment: { type: String, minlength: 3, maxlength: 255 },
-      user: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // User who submitted the review
-      createdAt: { type: Date, required: true, default: Date.now },
-      updatedAt: { type: Date, required: true, default: Date.now },
-    },
-  ],
-});
+  { timestamps: true },
+);
 
 const productSchema = new mongoose.Schema(
   {

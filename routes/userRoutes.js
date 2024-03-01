@@ -164,6 +164,7 @@ userRouter.get(
      * Search for users based on query parameters
      */
     const {
+      searchString,
       firstName,
       lastName,
       username,
@@ -178,24 +179,36 @@ userRouter.get(
     } = req.query;
     const searchQuery = {};
 
-    if (firstName) {
-      searchQuery.firstName = { $regex: firstName, $options: "i" };
+    if (searchString) {
+      searchQuery.$or = [
+        { firstName: { $regex: searchString, $options: "i" } },
+        { lastName: { $regex: searchString, $options: "i" } },
+        { email: { $regex: searchString, $options: "i" } },
+        { phone: { $regex: searchString, $options: "i" } },
+        { username: { $regex: searchString, $options: "i" } },
+        { countryCode: { $regex: searchString, $options: "i" } },
+      ];
+    } else {
+      if (firstName) {
+        searchQuery.firstName = { $regex: firstName, $options: "i" };
+      }
+      if (lastName) {
+        searchQuery.lastName = { $regex: lastName, $options: "i" };
+      }
+      if (username) {
+        searchQuery.username = { $regex: username, $options: "i" };
+      }
+      if (email) {
+        searchQuery.email = { $regex: email, $options: "i" };
+      }
+      if (countryCode) {
+        searchQuery.countryCode = { $regex: countryCode, $options: "i" };
+      }
+      if (phone) {
+        searchQuery.phone = { $regex: phone, $options: "i" };
+      }
     }
-    if (lastName) {
-      searchQuery.lastName = { $regex: lastName, $options: "i" };
-    }
-    if (username) {
-      searchQuery.username = { $regex: username, $options: "i" };
-    }
-    if (email) {
-      searchQuery.email = { $regex: email, $options: "i" };
-    }
-    if (countryCode) {
-      searchQuery.countryCode = { $regex: countryCode, $options: "i" };
-    }
-    if (phone) {
-      searchQuery.phone = { $regex: phone, $options: "i" };
-    }
+
     if (timeCreatedGTE) {
       searchQuery.createdAt = { $gte: new Date(timeCreatedGTE) };
     }
@@ -206,7 +219,7 @@ userRouter.get(
     const pageSize = limit ? Number(limit) : 30;
     const skip = (pageNumber - 1) * pageSize;
 
-    const totalUsers = await User.countDocuments({});
+    const totalUsers = await User.countDocuments(searchQuery);
     const users = await User.find(searchQuery)
       .select("-password")
       .skip(skip)

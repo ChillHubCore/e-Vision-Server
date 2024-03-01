@@ -9,7 +9,6 @@ import mongoose from "mongoose";
  * @property {string} status - The status of the order.
  * @property {string} notes - Additional notes for the order.
  * @property {string} trackingNumber - The tracking number for the order.
- * @property {string} courier - The courier for the order.
  * @property {Date} estimatedDeliveryDate - The estimated delivery date for the order.
  * @property {Date} actualDeliveryDate - The actual delivery date for the order.
  * @property {string} paymentMethod - The payment method for the order.
@@ -63,9 +62,6 @@ const orderSchema = new mongoose.Schema(
       maxlength: 500,
     },
     trackingNumber: {
-      type: String,
-    },
-    courier: {
       type: String,
     },
     estimatedDeliveryDate: {

@@ -24,6 +24,10 @@ const appSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    taxRate: {
+      type: Number,
+      required: true,
+    },
     version: {
       type: Number,
       required: true,

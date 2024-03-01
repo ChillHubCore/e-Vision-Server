@@ -13,7 +13,9 @@
 import express from "express";
 import expressAsyncHandler from "express-async-handler";
 import Order from "../models/orderModel.js";
-import { isAuth, isCreator } from "../utils.js";
+import Product from "../models/productModel.js";
+import { isAdmin, isAuth, isCreator } from "../utils.js";
+import App from "../models/appModel.js";
 const orderRouter = express.Router();
 
 orderRouter.post(
@@ -52,6 +54,76 @@ orderRouter.post(
     } catch (error) {
       console.log(error);
       res.status(500).send({ message: "Internal Server Error - 500" });
+    }
+  }),
+);
+
+orderRouter.post(
+  "/admin",
+  isAuth,
+  isAdmin,
+  expressAsyncHandler(async (req, res) => {
+    const {
+      cartItems,
+      shippingAddress,
+      paymentMethod,
+      notes,
+      user,
+      promotions,
+    } = req.body.values;
+    const GenerateCartItemsIdSchema = cartItems.map((item) => ({
+      quantity: item.quantity,
+      product: item.product._id,
+      variant: item.variant._id,
+    }));
+    const GenerateVariantIdSchema = cartItems.map((item) => item.variant._id);
+    try {
+      const choosenProducts = await Product.find({
+        "variants._id": { $in: GenerateVariantIdSchema },
+      });
+
+      const totalCartItemsPrice = GenerateCartItemsIdSchema.reduce(
+        (total, item) => {
+          const product = choosenProducts.find((p) =>
+            p.variants.some(
+              (v) => v._id.toString() === item.variant.toString(),
+            ),
+          );
+          if (product) {
+            const variant = product.variants.find(
+              (v) => v._id.toString() === item.variant.toString(),
+            );
+            const price = variant.price.discountedPrice
+              ? variant.price.discountedPrice
+              : variant.price.regularPrice;
+            return total + price * item.quantity;
+          }
+          return total;
+        },
+        0,
+      );
+
+      const highestVersionApp = await App.findOne({})
+        .sort({ version: -1 })
+        .select("taxRate");
+      const CurrentTaxRate = highestVersionApp.taxRate;
+      const taxPrice = totalCartItemsPrice * (CurrentTaxRate / 100);
+      const newOrder = new Order({
+        cartItems: GenerateCartItemsIdSchema,
+        shippingAddress,
+        paymentMethod,
+        itemsPrice: totalCartItemsPrice,
+        taxPrice,
+        user,
+        notes,
+        status: "pending",
+        promotions,
+      });
+      const order = await newOrder.save();
+      res.status(201).send({ message: "New Order Created.", order });
+    } catch (error) {
+      console.log(error);
+      res.status(500).send({ message: "Internal Server Error - 500", error });
     }
   }),
 );

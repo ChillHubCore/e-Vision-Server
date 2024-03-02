@@ -66,10 +66,27 @@ appRouter.get(
   isAdmin,
   expressAsyncHandler(async (req, res) => {
     const { desc } = req.query;
-    const apps = await App.find({
-      version: { $exists: true },
-    }).sort({ version: desc === "false" ? 1 : -1 });
-    res.json(apps);
+    try {
+      const apps = await App.find({
+        version: { $exists: true },
+      }).sort({ version: desc === "false" ? 1 : -1 });
+      res.json(apps);
+    } catch (err) {
+      res.status(500).send({ error: err });
+    }
+  }),
+);
+
+appRouter.get(
+  "/latest",
+  isAuth,
+  expressAsyncHandler(async (req, res) => {
+    try {
+      const app = await App.findOne({}, {}, { sort: { version: -1 } });
+      res.json(app);
+    } catch (err) {
+      res.status(500).send({ error: err });
+    }
   }),
 );
 

@@ -18,42 +18,223 @@ import { isAdmin, isAuth, isCreator } from "../utils.js";
 import App from "../models/appModel.js";
 const orderRouter = express.Router();
 
-orderRouter.post(
+orderRouter.get(
   "/",
   isAuth,
+  isCreator,
   expressAsyncHandler(async (req, res) => {
-    const { cartItems, shippingAddress, paymentMethod, notes } = req.body;
-    const totalPriceCalculated = cartItems.reduce((a, c) => a + c.price, 0);
-    const taxCalculated = totalPriceCalculated / 10;
+    const {
+      pageNumber = 1,
+      limit,
+      desc = "false",
+      reciverName,
+      reciverPhone,
+      reciverAddress,
+      reciverCountry,
+      reciverProvince,
+      reciverCity,
+      reciverPostalCode,
+      shippingMethod,
+      status,
+      trackingNumber,
+      estimatedDeliveryDate,
+      actualDeliveryDate,
+      paymentMethod,
+      itemsPrice,
+      isPaid,
+      isDelivered,
+      isRecived,
+      timeCreatedGTE,
+      timeCreatedLTE,
+      deliveredAt,
+      paidAt,
+      promotions,
+    } = req.query;
+
+    const searchQuery = {};
+    if (reciverName) {
+      searchQuery["shippingAddress.reciverName"] = {
+        $regex: reciverName,
+        $options: "i",
+      };
+    }
+    if (reciverPhone) {
+      searchQuery["shippingAddress.reciverPhone"] = {
+        $regex: reciverPhone,
+        $options: "i",
+      };
+    }
+    if (reciverAddress) {
+      searchQuery["shippingAddress.address"] = {
+        $regex: reciverAddress,
+        $options: "i",
+      };
+    }
+    if (reciverCountry) {
+      searchQuery["shippingAddress.country"] = {
+        $regex: reciverCountry,
+        $options: "i",
+      };
+    }
+    if (reciverProvince) {
+      searchQuery["shippingAddress.province"] = {
+        $regex: reciverProvince,
+        $options: "i",
+      };
+    }
+    if (reciverCity) {
+      searchQuery["shippingAddress.city"] = {
+        $regex: reciverCity,
+        $options: "i",
+      };
+    }
+    if (reciverPostalCode) {
+      searchQuery["shippingAddress.postalCode"] = {
+        $regex: reciverPostalCode,
+        $options: "i",
+      };
+    }
+    if (shippingMethod) {
+      searchQuery["shippingAddress.shippingMethod"] = {
+        $regex: shippingMethod,
+        $options: "i",
+      };
+    }
+    if (status) {
+      searchQuery["status"] = {
+        $regex: status,
+        $options: "i",
+      };
+    }
+    if (trackingNumber) {
+      searchQuery["trackingNumber"] = {
+        $regex: trackingNumber,
+        $options: "i",
+      };
+    }
+    if (estimatedDeliveryDate) {
+      searchQuery["estimatedDeliveryDate"] = {
+        $regex: estimatedDeliveryDate,
+        $options: "i",
+      };
+    }
+    if (actualDeliveryDate) {
+      searchQuery["actualDeliveryDate"] = {
+        $regex: actualDeliveryDate,
+        $options: "i",
+      };
+    }
+    if (paymentMethod) {
+      searchQuery["paymentMethod"] = {
+        $regex: paymentMethod,
+        $options: "i",
+      };
+    }
+    if (itemsPrice) {
+      searchQuery["itemsPrice"] = {
+        $regex: itemsPrice,
+        $options: "i",
+      };
+    }
+    if (isPaid !== undefined) {
+      searchQuery["isPaid"] = isPaid === "true" ? true : false;
+    }
+    if (isDelivered !== undefined) {
+      searchQuery["isDelivered"] = isDelivered === "true" ? true : false;
+    }
+    if (isRecived !== undefined) {
+      searchQuery["isRecived"] = isRecived === "true" ? true : false;
+    }
+    if (timeCreatedGTE) {
+      searchQuery["createdAt"] = {
+        $gte: new Date(timeCreatedGTE),
+      };
+    }
+    if (timeCreatedLTE) {
+      searchQuery["createdAt"] = {
+        $lte: new Date(timeCreatedLTE),
+      };
+    }
+    if (deliveredAt) {
+      searchQuery["deliveredAt"] = {
+        $regex: deliveredAt,
+        $options: "i",
+      };
+    }
+    if (paidAt) {
+      searchQuery["paidAt"] = {
+        $regex: paidAt,
+        $options: "i",
+      };
+    }
+    if (promotions) {
+      searchQuery["promotions"] = {
+        $regex: promotions,
+        $options: "i",
+      };
+    }
+
+    const pageSize = limit ? Number(limit) : 30;
+    const skip = (pageNumber - 1) * pageSize;
+    try {
+      const orders = await Order.find(searchQuery)
+        .skip(skip)
+        .limit(pageSize)
+        .sort({ createdAt: desc === "false" ? -1 : 1 })
+        .populate("user", "username _id")
+        .populate("cartItems.product");
+      const totalOrders = await Order.countDocuments({});
+      res.send({ orders, length: totalOrders });
+    } catch (error) {
+      res.status(500).send({ message: "Internal Server Error - 500", error });
+    }
+  }),
+);
+
+orderRouter.get(
+  "/:id",
+  isAuth,
+  isCreator,
+  expressAsyncHandler(async (req, res) => {
     try {
       /**
-       * Creates a new order.
-       *
-       * @param {Array} cartItems - The items in the cart.
-       * @param {Object} shippingAddress - The shipping address for the order.
-       * @param {string} paymentMethod - The payment method for the order.
-       * @param {number} itemsPrice - The total price of the items in the cart.
-       * @param {number} shippingPrice - The shipping price for the order.
-       * @param {number} taxPrice - The tax price for the order.
-       * @param {number} totalPrice - The total price of the order.
-       * @param {string} user - The ID of the user placing the order.
-       * @returns {Object} - The newly created order.
+       * Retrieves an order by its ID.
+       * @param {string} req.params.id - The ID of the order to retrieve.
+       * @returns {Promise<Object>} The order object.
        */
-      const newOrder = new Order({
-        cartItems: cartItems,
-        shippingAddress,
-        paymentMethod,
-        itemsPrice: totalPriceCalculated,
-        taxPrice: taxCalculated,
-        user: req.user._id,
-        notes,
-      });
-
-      const order = await newOrder.save();
-      res.status(201).send({ message: "New Order Created.", order });
+      const order = await Order.findById(req.params.id)
+        .populate("user", "username _id")
+        .populate("cartItems.product");
+      if (order) {
+        res.send(order);
+      } else {
+        res.status(404).send({ message: "Order Not Found - 404" });
+      }
     } catch (error) {
-      console.log(error);
-      res.status(500).send({ message: "Internal Server Error - 500" });
+      res.status(500).send({ message: "Internal Server Error - 500", error });
+    }
+  }),
+);
+
+orderRouter.delete(
+  "/:id",
+  isAuth,
+  isAdmin,
+  expressAsyncHandler(async (req, res) => {
+    try {
+      /**
+       * Delete a order by its ID
+       */
+      const order = await Order.findById(req.params.id);
+
+      if (order) {
+        await Order.deleteOne({ _id: req.params.id });
+        res.status(200).send({ message: "Order deleted successfully." });
+      } else {
+        res.status(404).send({ message: "Order not found" });
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Internal Server Error", error });
     }
   }),
 );
@@ -77,7 +258,27 @@ orderRouter.post(
       variant: item.variant._id,
     }));
     const GenerateVariantIdSchema = cartItems.map((item) => item.variant._id);
+
     try {
+      const inStockCheck = cartItems.map(async (item) => {
+        const product = await Product.findById(item.product);
+        if (product) {
+          const variant = product.variants.find(
+            (v) => v._id.toString() === item.variant,
+          );
+          if (variant) {
+            if (
+              variant.inStock < item.quantity &&
+              variant.availability === true
+            ) {
+              return res.status(400).send({
+                message: `Sorry, ${product.name} ${variant.name} is out of stock or currently unavailable.`,
+              });
+            }
+          }
+        }
+      });
+      await Promise.all(inStockCheck);
       const choosenProducts = await Product.find({
         "variants._id": { $in: GenerateVariantIdSchema },
       });
@@ -128,31 +329,45 @@ orderRouter.post(
   }),
 );
 
-orderRouter.get(
-  "/:id",
+orderRouter.put(
+  "/admin/:id",
   isAuth,
+  isAdmin,
   expressAsyncHandler(async (req, res) => {
+    const {
+      shippingAddress,
+      paymentMethod,
+      notes,
+      user,
+      promotions,
+    } = req.body.values;
+
     try {
-      /**
-       * Retrieves an order by its ID.
-       * @param {string} req.params.id - The ID of the order to retrieve.
-       * @returns {Promise<Object>} The order object.
-       */
-      const order = await Order.findById({
-        _id: req.params.id,
-        user: req.user._id,
-      })
-        .populate("cartItems")
-        .populate("user", "username");
+      const order = await Order.findById(req.params.id);
       if (order) {
-        res.send(order);
-      } else {
-        res.status(404).send({ message: "Order Not Found - 404" });
+        if (shippingAddress) {
+          order.shippingAddress = shippingAddress;
+        }
+        if (paymentMethod) {
+          order.paymentMethod = paymentMethod;
+        }
+        if (user) {
+          order.user = user;
+        }
+        if (notes) {
+          order.notes = notes;
+        }
+        if (promotions) {
+          order.promotions = promotions;
+        }
+        const updatedOrder = await order.save();
+        res.status(200).send({ message: "Order Updated.", order: updatedOrder });
       }
     } catch (error) {
-      res.status(500).send({ message: "Internal Server Error - 500" });
+      res.status(500).send({ message: "Internal Server Error - 500", error });
     }
-  }),
+  }
+  ),
 );
 
 orderRouter.get(
@@ -165,20 +380,6 @@ orderRouter.get(
        * @type {Array<Object>}
        */
       const orders = await Order.find({ user: req.user._id });
-      res.send(orders);
-    } catch (error) {
-      res.status(500).send({ message: "Internal Server Error - 500" });
-    }
-  }),
-);
-
-orderRouter.get(
-  "/all",
-  isAuth,
-  isCreator,
-  expressAsyncHandler(async (req, res) => {
-    try {
-      const orders = await Order.find().populate("user", "name");
       res.send(orders);
     } catch (error) {
       res.status(500).send({ message: "Internal Server Error - 500" });

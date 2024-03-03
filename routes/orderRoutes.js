@@ -16,6 +16,7 @@ import Order from "../models/orderModel.js";
 import Product from "../models/productModel.js";
 import { isAdmin, isAuth, isCreator } from "../utils.js";
 import App from "../models/appModel.js";
+import { inStockCheck } from "../functions/index.js";
 const orderRouter = express.Router();
 
 orderRouter.get(
@@ -183,7 +184,7 @@ orderRouter.get(
         .sort({ createdAt: desc === "false" ? -1 : 1 })
         .populate("user", "username _id")
         .populate("cartItems.product");
-      const totalOrders = await Order.countDocuments({});
+      const totalOrders = await Order.countDocuments(searchQuery);
       res.send({ orders, length: totalOrders });
     } catch (error) {
       res.status(500).send({ message: "Internal Server Error - 500", error });
@@ -260,25 +261,7 @@ orderRouter.post(
     const GenerateVariantIdSchema = cartItems.map((item) => item.variant._id);
 
     try {
-      const inStockCheck = cartItems.map(async (item) => {
-        const product = await Product.findById(item.product);
-        if (product) {
-          const variant = product.variants.find(
-            (v) => v._id.toString() === item.variant,
-          );
-          if (variant) {
-            if (
-              variant.inStock < item.quantity &&
-              variant.availability === true
-            ) {
-              return res.status(400).send({
-                message: `Sorry, ${product.name} ${variant.name} is out of stock or currently unavailable.`,
-              });
-            }
-          }
-        }
-      });
-      await Promise.all(inStockCheck);
+      inStockCheck(cartItems);
       const choosenProducts = await Product.find({
         "variants._id": { $in: GenerateVariantIdSchema },
       });
@@ -341,7 +324,7 @@ orderRouter.put(
 
     try {
       const order = await Order.findById(req.params.id);
-      if (order) {
+      if (order && order.status === "pending") {
         if (shippingAddress) {
           order.shippingAddress = shippingAddress;
         }
@@ -365,23 +348,6 @@ orderRouter.put(
       }
     } catch (error) {
       res.status(500).send({ message: "Internal Server Error - 500", error });
-    }
-  }),
-);
-
-orderRouter.get(
-  "/mine",
-  isAuth,
-  expressAsyncHandler(async (req, res) => {
-    try {
-      /**
-       * Retrieves orders for a specific user.
-       * @type {Array<Object>}
-       */
-      const orders = await Order.find({ user: req.user._id });
-      res.send(orders);
-    } catch (error) {
-      res.status(500).send({ message: "Internal Server Error - 500" });
     }
   }),
 );

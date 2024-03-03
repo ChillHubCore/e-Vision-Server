@@ -133,7 +133,7 @@ productRouter.get(
       const pageSize = limit ? Number(limit) : 30;
       const skip = (pageNumber - 1) * pageSize;
 
-      const totalProducts = await Product.countDocuments({});
+      const totalProducts = await Product.countDocuments(searchQuery);
       const products = await Product.find(searchQuery)
         .skip(skip)
         .limit(pageSize)

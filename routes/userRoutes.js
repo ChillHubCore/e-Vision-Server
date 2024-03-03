@@ -295,7 +295,7 @@ userRouter.post(
     if (user) {
       if (bcrypt.compareSync(SigninFormValues.password, user.password)) {
         res.status(201).json({
-          name: user.name,
+          username: user.username,
           isCreator: user.isCreator,
           isAdmin: user.isAdmin,
           token: generateToken(user),
@@ -341,7 +341,7 @@ userRouter.post(
     });
     const user = await newUser.save();
     res.status(201).json({
-      name: user.name,
+      username: user.username,
       isCreator: user.isCreator,
       isAdmin: user.isAdmin,
       token: generateToken(user),

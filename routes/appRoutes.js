@@ -25,6 +25,7 @@ appRouter.post(
       postalOptions,
       paymentOptions,
       taxRate,
+      CardToCard,
     } = req.body.values;
 
     const highestVersion = await App.findOne({}, {}, { sort: { version: -1 } });
@@ -42,6 +43,7 @@ appRouter.post(
       postalOptions,
       paymentOptions,
       taxRate,
+      CardToCard,
     });
 
     const validatedApp = appValidator.safeParse(app);
@@ -84,6 +86,25 @@ appRouter.get(
     try {
       const app = await App.findOne({}, {}, { sort: { version: -1 } });
       res.json(app);
+    } catch (err) {
+      res.status(500).send({ error: err });
+    }
+  }),
+);
+
+appRouter.get(
+  "/payment-options",
+  isAuth,
+  expressAsyncHandler(async (req, res) => {
+    const { type } = req.query;
+    try {
+      if (type === "Card-To-Card") {
+        const app = await App.findOne({}, {}, { sort: { version: -1 } });
+        const paymentOptions = app.CardToCard;
+        res.json(paymentOptions);
+      } else {
+        res.status(400).send({ message: "Invalid payment type" });
+      }
     } catch (err) {
       res.status(500).send({ error: err });
     }

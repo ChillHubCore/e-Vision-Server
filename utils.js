@@ -1,30 +1,28 @@
 import jwt from "jsonwebtoken";
 import process from "process";
 
-/**
- * Generates a token for the given user.
- * @param {Object} user - The user object.
- * @param {string} user._id - The user's ID.
- * @param {string} user.name - The user's name.
- * @param {string} user.email - The user's email.
- * @param {boolean} user.isAdmin - Indicates if the user is an admin.
- * @returns {string} - The generated token.
- */
 export const generateToken = (user) => {
   return jwt.sign(
     {
-      _id: user._id,
-      name: user.name,
+      _id: user._id.toString(),
+      username: user.username,
+      firstName: user.firstName,
+      lastName: user.lastName,
       email: user.email,
       isAdmin: user.isAdmin,
       isCreator: user.isCreator,
       isEmailVerified: user.isEmailVerified,
       isPhoneVerified: user.isPhoneVerified,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
     },
     process.env.JWT_SECRET,
     {
-      expiresIn: "7d",
+      expiresIn: "1d",
+      audience: process.env.allowedOrigin,
+      issuer: process.env.URL,
     },
+    { algorithm: "RS256" },
   );
 };
 
@@ -37,10 +35,13 @@ export const generateToken = (user) => {
 export const isAuth = (req, res, next) => {
   const authorization = req.headers.authorization;
   if (authorization) {
-    const token = authorization.slice(7, authorization.length); // Bearer XXXXXX
+    const token = authorization.slice(7, authorization.length); // Slice the Bearer part of the token
     jwt.verify(token, process.env.JWT_SECRET, (err, decode) => {
       if (err) {
-        res.status(401).send({ message: "Invalid Token" });
+        if (err.name === "TokenExpiredError") {
+          return res.status(401).json({ error: "Token expired" });
+        }
+        res.status(403).send({ message: "Invalid Token" });
       } else {
         req.user = decode;
         next();

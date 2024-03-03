@@ -317,6 +317,8 @@ orderRouter.post(
         taxPrice,
         user,
         notes,
+        creator: req.user._id,
+        updatedBy: req.user._id,
         status: "pending",
         promotions,
       });
@@ -334,13 +336,8 @@ orderRouter.put(
   isAuth,
   isAdmin,
   expressAsyncHandler(async (req, res) => {
-    const {
-      shippingAddress,
-      paymentMethod,
-      notes,
-      user,
-      promotions,
-    } = req.body.values;
+    const { shippingAddress, paymentMethod, notes, user, promotions } =
+      req.body.values;
 
     try {
       const order = await Order.findById(req.params.id);
@@ -360,14 +357,16 @@ orderRouter.put(
         if (promotions) {
           order.promotions = promotions;
         }
+        order.updatedBy = req.user._id;
         const updatedOrder = await order.save();
-        res.status(200).send({ message: "Order Updated.", order: updatedOrder });
+        res
+          .status(200)
+          .send({ message: "Order Updated.", order: updatedOrder });
       }
     } catch (error) {
       res.status(500).send({ message: "Internal Server Error - 500", error });
     }
-  }
-  ),
+  }),
 );
 
 orderRouter.get(

@@ -75,18 +75,21 @@ const orderSchema = new mongoose.Schema(
       enum: ["Card-To-Card"],
       required: true,
     },
-    paymentResult: {
-      id: String,
-      status: String,
-      update_time: String,
-      email_address: String,
-    },
     itemsPrice: { type: Number, required: true }, // total price of the cart items
     taxPrice: { type: Number, required: true },
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
+    },
+    creator: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    updatedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
     },
     isPaid: { type: Boolean, default: false },
     paidAt: { type: Date },

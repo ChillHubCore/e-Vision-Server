@@ -16,7 +16,7 @@ const notificationSchema = new mongoose.Schema(
       minLength: 3,
       maxLength: 2047,
     },
-    dateRead: Date,
+    isMessageRead: { type: Boolean, default: false, required: true },
   },
   {
     timestamps: true,

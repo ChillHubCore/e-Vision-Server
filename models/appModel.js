@@ -76,9 +76,31 @@ const appSchema = new mongoose.Schema(
       default: [],
     },
     paymentOptions: {
-      type: [{ type: String, minLength: 3, maxLength: 255 }],
-      required: true,
-      default: [],
+      type: [{ type: String, enum: ["Card-To-Card"] }],
+    },
+    CardToCard: {
+      type: [
+        {
+          cardNumber: {
+            type: String,
+            required: true,
+            unique: true,
+          },
+          cardShabaNumber: {
+            type: String,
+            required: true,
+            unique: true,
+          },
+          cardOwner: {
+            type: String,
+            required: true,
+          },
+          available: {
+            type: Boolean,
+            required: true,
+          },
+        },
+      ],
     },
   },
   {

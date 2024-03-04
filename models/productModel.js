@@ -2,6 +2,14 @@ import mongoose from "mongoose";
 
 const variantSchema = new mongoose.Schema(
   {
+    metaTitle: {
+      type: String,
+      required: true,
+    },
+    metaTags: {
+      type: [String],
+      required: true,
+    },
     images: { type: [String], required: true }, // Array of product images
     details: [
       {

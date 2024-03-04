@@ -16,7 +16,6 @@ import Order from "../models/orderModel.js";
 import Product from "../models/productModel.js";
 import { isAdmin, isAuth, isCreator } from "../utils.js";
 import App from "../models/appModel.js";
-import { inStockCheck } from "../functions/index.js";
 const orderRouter = express.Router();
 
 orderRouter.get(
@@ -261,10 +260,33 @@ orderRouter.post(
     const GenerateVariantIdSchema = cartItems.map((item) => item.variant._id);
 
     try {
-      inStockCheck(cartItems);
       const choosenProducts = await Product.find({
         "variants._id": { $in: GenerateVariantIdSchema },
       });
+
+      try {
+        GenerateCartItemsIdSchema.forEach((item) => {
+          const product = choosenProducts.find((p) =>
+            p.variants.some(
+              (v) => v._id.toString() === item.variant.toString(),
+            ),
+          );
+          if (product) {
+            const variant = product.variants.find(
+              (v) => v._id.toString() === item.variant.toString(),
+            );
+            if (
+              variant.inStock < item.quantity ||
+              variant.availability === false
+            ) {
+              throw new Error(`Insufficient stock for product ${product._id}`);
+            }
+          }
+        });
+      } catch (error) {
+        res.status(400).send({ message: error.message });
+        return;
+      }
 
       const totalCartItemsPrice = GenerateCartItemsIdSchema.reduce(
         (total, item) => {

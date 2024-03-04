@@ -270,62 +270,72 @@ transactionRouter.patch(
   }),
 );
 
-// transactionRouter.patch(
-//   "/:id/approve-payment",
-//   isAuth,
-//   isAdmin,
-//   expressAsyncHandler(async (req, res) => {
-//     const session = await mongoose.startSession();
+transactionRouter.patch(
+  "/:id/approve-payment",
+  isAuth,
+  isAdmin,
+  expressAsyncHandler(async (req, res) => {
+    const session = await mongoose.startSession();
+    try {
+      const transaction = await Transaction.findById(req.params.id);
+      session.startTransaction();
 
-//     try {
-//       const transaction = await Transaction.findById(req.params.id);
-//       session.startTransaction();
+      if (transaction && transaction.status === "waiting-for-approval") {
+        const order = await Order.findById(transaction.order).session(session);
 
-//       if (transaction && transaction.status === "waiting-for-approval") {
-//         const order = await Order.findById(transaction).session(session);
-
-//         // Update variant stock
-//         for (const item of order.cartItems) {
-//           const product = await Product.findById(item.product).session(session);
-//           if (product) {
-//             const variant = product.variants.find(
-//               (v) => v._id.toString() === item.variant.toString(),
-//             );
-//             if (variant) {
-//               if (variant.inStock >= item.quantity) {
-//                 variant.inStock -= item.quantity;
-//                 await product.save();
-//               } else {
-//                 throw new Error(
-//                   `Insufficient stock for product ${product._id}`,
-//                 );
-//               }
-//             } else {
-//               throw new Error(`Variant not found for product ${product._id}`);
-//             }
-//           } else {
-//             throw new Error(`Product not found: ${item.product}`);
-//           }
-//         }
-//         transaction.status = "success";
-//         transaction.updatedBy = req.user._id;
-//         const updatedTransaction = await transaction.save().session(session);
-//         await session.commitTransaction();
-//         res.send({
-//           message: "Transaction Updated",
-//           transaction: updatedTransaction,
-//         });
-//       } else {
-//         throw new Error("Transaction not found or status not supported");
-//       }
-//     } catch (err) {
-//       console.log(err);
-//       session.abortTransaction();
-//       res.status(500).send({ message: err.message });
-//     } finally {
-//       session.endSession();
-//     }
-//   }),
-// );  database is not in replica mode , after data migration we will finish atomic functions...
+        // Update variant stock
+        try {
+          for (const item of order.cartItems) {
+            const product = await Product.findById(item.product).session(
+              session,
+            );
+            if (product) {
+              const variant = product.variants.find(
+                (v) => v._id.toString() === item.variant.toString(),
+              );
+              if (variant) {
+                if (variant.inStock >= item.quantity) {
+                  variant.inStock -= item.quantity;
+                  await product.save();
+                } else {
+                  throw new Error(
+                    `Insufficient stock for product ${product._id}`,
+                  );
+                }
+              } else {
+                throw new Error(`Variant not found for product ${product._id}`);
+              }
+            } else {
+              session.abortTransaction();
+              res.status(404).send({ message: "Product Not Found" });
+            }
+          }
+        } catch (err) {
+          session.abortTransaction();
+          res.status(500).send({ message: err.message });
+        }
+        order.isPaid = true;
+        order.paidAt = Date.now();
+        transaction.status = "success";
+        transaction.updatedBy = req.user._id;
+        const updatedTransaction = await transaction.save();
+        await order.save();
+        await session.commitTransaction();
+        res.send({
+          message: "Transaction Updated",
+          transaction: updatedTransaction,
+        });
+      } else {
+        session.abortTransaction();
+        res.status(404).send({ message: "Transaction Not Found" });
+      }
+    } catch (err) {
+      session.abortTransaction();
+      res.status(500).send({ message: err.message });
+    } finally {
+      session.endSession();
+    }
+  }),
+);
 
 export default transactionRouter;

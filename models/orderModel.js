@@ -110,7 +110,7 @@ const orderSchema = new mongoose.Schema(
 );
 
 // Add indexes for frequently queried fields
-orderSchema.index({ user: 1, status: 1 });
+// orderSchema.index({ user: 1, status: 1 });
 
 const Order = mongoose.model("Order", orderSchema);
 export default Order;

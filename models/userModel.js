@@ -5,18 +5,19 @@ const notificationSchema = new mongoose.Schema(
     title: {
       type: String,
       required: true,
-      unique: true,
       minLength: 3,
       maxLength: 255,
     },
     message: {
       type: String,
       required: true,
-      unique: true,
       minLength: 3,
       maxLength: 2047,
     },
     isMessageRead: { type: Boolean, default: false, required: true },
+  },
+  {
+    autoCreate: true,
   },
   {
     timestamps: true,
@@ -79,11 +80,11 @@ const userSchema = new mongoose.Schema(
     ],
     status: {
       type: [userStatusSchema],
-      default: [],
+      required: false,
     },
     notifications: {
       type: [notificationSchema],
-      default: [],
+      required: false,
     },
   },
   {

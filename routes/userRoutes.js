@@ -57,7 +57,19 @@ userRouter.post(
     const user = await newUser.save();
     res.status(201).json({
       message: "User Created",
-      user: user,
+      user: {
+        _id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        countryCode: user.countryCode,
+        phone: user.phone,
+        username: user.username,
+        isAdmin: user.isAdmin,
+        isCreator: user.isCreator,
+        isEmailVerified: user.isEmailVerified,
+        isPhoneVerified: user.isPhoneVerified,
+      },
     });
   }),
 );

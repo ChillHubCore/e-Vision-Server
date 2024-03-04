@@ -9,7 +9,7 @@ export async function SendNotificationForOneUser({ userId, title, message }) {
   }
 }
 
-export function inStockCheck(cartItems) {
+export async function inStockCheck(cartItems) {
   const inStockCheckFlag = cartItems.map(async (item) => {
     const product = await Product.findById(item.product);
     if (product) {
@@ -17,10 +17,8 @@ export function inStockCheck(cartItems) {
         (v) => v._id.toString() === item.variant,
       );
       if (variant) {
-        if (variant.inStock < item.quantity && variant.availability === true) {
-          return res.status(400).send({
-            message: `Sorry, ${product.name} ${variant.name} is out of stock or currently unavailable.`,
-          });
+        if (variant.inStock < item.quantity || variant.availability === false) {
+          throw new Error(`Insufficient stock for product ${product._id}`);
         }
       }
     }

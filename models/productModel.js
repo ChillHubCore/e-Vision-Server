@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { zeroEmptySpaceValidator } from "../validators/inputValidators.js";
 
 const variantSchema = new mongoose.Schema(
   {
@@ -9,7 +10,17 @@ const variantSchema = new mongoose.Schema(
         value: { type: String, required: true, minlength: 3, maxlength: 255 },
       },
     ], // Array of variant attributes, e.g., "color", "size", "material"
-    SKU: { type: String, required: true, unique: true }, // Stock Keeping Unit
+    SKU: {
+      type: String,
+      required: true,
+      unique: true,
+      validate: {
+        validator: function (value) {
+          return zeroEmptySpaceValidator.safeParse(value).success;
+        },
+        message: "SKU should not contain any empty spaces.",
+      },
+    }, // Stock Keeping Unit
     price: {
       type: {
         regularPrice: { type: Number, required: true }, // Regular price
@@ -47,14 +58,20 @@ const productSchema = new mongoose.Schema(
     metaTitle: {
       type: String,
       required: true,
+      minlength: 3,
+      maxlength: 255,
     },
     metaDescription: {
       type: String,
       required: true,
+      minlength: 3,
+      maxlength: 255,
     },
     metaTags: {
       type: [String],
       required: true,
+      minlength: 3,
+      maxlength: 255,
     },
     name: { type: String, required: true, minlength: 3, maxlength: 255 },
     slug: {
@@ -63,6 +80,12 @@ const productSchema = new mongoose.Schema(
       unique: true,
       minlength: 3,
       maxlength: 1023,
+      validate: {
+        validator: function (value) {
+          return zeroEmptySpaceValidator.safeParse(value).success;
+        },
+        message: "Slug should not contain any empty spaces.",
+      },
     },
     brand: { type: String, required: true, minlength: 3, maxlength: 255 },
     category: { type: String, required: true, minlength: 3, maxlength: 255 },

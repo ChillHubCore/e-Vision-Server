@@ -7,7 +7,6 @@ import dotenv from "dotenv";
 import {
   emailValidator,
   passwordValidator,
-  phoneValidator,
 } from "../validators/userValidators.js";
 
 dotenv.config();
@@ -23,32 +22,22 @@ userRouter.post(
     const validatePassword = passwordValidator.parse(
       CreateUserFormValues.password,
     );
-    const validateEmail = emailValidator.parse(CreateUserFormValues.email);
-    const validatePhone = phoneValidator.parse(CreateUserFormValues.phone);
 
     if (!validatePassword)
       return res.status(400).json({
         message: validatePassword,
       });
-    if (!validateEmail) {
-      return res.status(400).json({
-        message: validateEmail,
-      });
-    }
-    if (!validatePhone) {
-      return res.status(400).json({
-        message: validatePhone,
-      });
-    }
 
     const newUser = new User({
       firstName: CreateUserFormValues.firstName.trim(),
       lastName: CreateUserFormValues.lastName.trim(),
       email: CreateUserFormValues.email.trim(),
+      birthDate: CreateUserFormValues.birthDate,
       countryCode: CreateUserFormValues.countryCode.trim(),
       phone: CreateUserFormValues.phone.trim(),
       username: CreateUserFormValues.username.trim(),
       isAdmin: CreateUserFormValues.isAdmin,
+      role: CreateUserFormValues.role,
       isCreator: CreateUserFormValues.isCreator,
       isEmailVerified: CreateUserFormValues.isEmailVerified,
       isPhoneVerified: CreateUserFormValues.isPhoneVerified,
@@ -89,23 +78,6 @@ userRouter.put(
       if (!validatePassword)
         return res.status(400).json({
           message: validatePassword,
-        });
-    }
-
-    if (EditUserFormValues.email) {
-      {
-        const validateEmail = emailValidator.parse(EditUserFormValues.email);
-        if (!validateEmail)
-          return res.status(400).json({
-            message: validateEmail,
-          });
-      }
-    }
-    if (EditUserFormValues.phone) {
-      const validatePhone = phoneValidator.parse(EditUserFormValues.phone);
-      if (!validatePhone)
-        return res.status(400).json({
-          message: validatePhone,
         });
     }
 
@@ -150,6 +122,12 @@ userRouter.put(
         EditUserFormValues.isPhoneVerified !== undefined
           ? EditUserFormValues.isPhoneVerified
           : user.isPhoneVerified;
+      user.role = EditUserFormValues.role || user.role;
+      user.loyaltyPoints =
+        EditUserFormValues.loyaltyPoints || user.loyaltyPoints;
+      user.shopTokenBalance =
+        EditUserFormValues.shopTokenBalance || user.shopTokenBalance;
+      user.birthDate = EditUserFormValues.birthDate || user.birthDate;
 
       if (
         EditUserFormValues.password !== undefined &&
@@ -175,70 +153,112 @@ userRouter.get(
     /**
      * Search for users based on query parameters
      */
-    const {
-      searchString,
-      firstName,
-      lastName,
-      username,
-      email,
-      countryCode,
-      phone,
-      pageNumber,
-      limit,
-      timeCreatedGTE,
-      timeCreatedLTE,
-      desc = "false",
-    } = req.query;
-    const searchQuery = {};
+    try {
+      const {
+        id,
+        searchString,
+        firstName,
+        lastName,
+        username,
+        email,
+        countryCode,
+        phone,
+        pageNumber,
+        limit,
+        birthDateGTE,
+        birthDateLTE,
+        role,
+        loyaltyPointsGTE,
+        loyaltyPointsLTE,
+        shopTokenBalanceGTE,
+        shopTokenBalanceLTE,
+        timeCreatedGTE,
+        timeCreatedLTE,
+        desc = "false",
+      } = req.query;
+      const searchQuery = {};
 
-    if (searchString) {
-      searchQuery.$or = [
-        { firstName: { $regex: searchString, $options: "i" } },
-        { lastName: { $regex: searchString, $options: "i" } },
-        { email: { $regex: searchString, $options: "i" } },
-        { phone: { $regex: searchString, $options: "i" } },
-        { username: { $regex: searchString, $options: "i" } },
-        { countryCode: { $regex: searchString, $options: "i" } },
-      ];
-    } else {
-      if (firstName) {
-        searchQuery.firstName = { $regex: firstName, $options: "i" };
+      if (searchString !== undefined && searchString.trim() !== "") {
+        searchQuery.$or = [
+          { firstName: { $regex: searchString, $options: "i" } },
+          { lastName: { $regex: searchString, $options: "i" } },
+          { email: { $regex: searchString, $options: "i" } },
+          { phone: { $regex: searchString, $options: "i" } },
+          { username: { $regex: searchString, $options: "i" } },
+          { countryCode: { $regex: searchString, $options: "i" } },
+        ];
+      } else {
+        if (firstName !== undefined && firstName.trim() !== "") {
+          searchQuery.firstName = { $regex: firstName, $options: "i" };
+        }
+        if (lastName !== undefined && lastName.trim() !== "") {
+          searchQuery.lastName = { $regex: lastName, $options: "i" };
+        }
+        if (username !== undefined && username.trim() !== "") {
+          searchQuery.username = { $regex: username, $options: "i" };
+        }
+        if (email !== undefined && email.trim() !== "") {
+          searchQuery.email = { $regex: email, $options: "i" };
+        }
+        if (countryCode !== undefined && countryCode.trim() !== "") {
+          searchQuery.countryCode = { $regex: countryCode, $options: "i" };
+        }
+        if (phone !== undefined && phone.trim() !== "") {
+          searchQuery.phone = { $regex: phone, $options: "i" };
+        }
       }
-      if (lastName) {
-        searchQuery.lastName = { $regex: lastName, $options: "i" };
+
+      if (timeCreatedGTE !== undefined && timeCreatedGTE.trim() !== "") {
+        searchQuery.createdAt = { $gte: new Date(timeCreatedGTE) };
       }
-      if (username) {
-        searchQuery.username = { $regex: username, $options: "i" };
+      if (timeCreatedLTE !== undefined && timeCreatedLTE.trim() !== "") {
+        searchQuery.createdAt = { $lte: new Date(timeCreatedLTE) };
       }
-      if (email) {
-        searchQuery.email = { $regex: email, $options: "i" };
+      if (id !== undefined && id.trim() !== "") {
+        searchQuery._id = id;
       }
-      if (countryCode) {
-        searchQuery.countryCode = { $regex: countryCode, $options: "i" };
+      if (birthDateGTE !== undefined && birthDateGTE.trim() !== "") {
+        searchQuery.birthDate = { $gte: new Date(birthDateGTE) };
       }
-      if (phone) {
-        searchQuery.phone = { $regex: phone, $options: "i" };
+      if (birthDateLTE !== undefined && birthDateLTE.trim() !== "") {
+        searchQuery.birthDate = { $lte: new Date(birthDateLTE) };
       }
+      if (role !== undefined && role.trim() !== "") {
+        searchQuery.role = role;
+      }
+      if (loyaltyPointsGTE !== undefined && loyaltyPointsGTE.trim() !== "") {
+        searchQuery.loyaltyPoints = { $gte: loyaltyPointsGTE };
+      }
+      if (loyaltyPointsLTE !== undefined && loyaltyPointsLTE.trim() !== "") {
+        searchQuery.loyaltyPoints = { $lte: loyaltyPointsLTE };
+      }
+      if (
+        shopTokenBalanceGTE !== undefined &&
+        shopTokenBalanceGTE.trim() !== ""
+      ) {
+        searchQuery.shopTokenBalance = { $gte: shopTokenBalanceGTE };
+      }
+      if (
+        shopTokenBalanceLTE !== undefined &&
+        shopTokenBalanceLTE.trim() !== ""
+      ) {
+        searchQuery.shopTokenBalance = { $lte: shopTokenBalanceLTE };
+      }
+
+      const pageSize = limit ? Number(limit) : 30;
+      const skip = (pageNumber - 1) * pageSize;
+
+      const totalUsers = await User.countDocuments(searchQuery);
+      const users = await User.find(searchQuery)
+        .select("-password")
+        .skip(skip)
+        .limit(pageSize)
+        .sort({ createdAt: desc === "true" ? -1 : 1 });
+
+      res.json({ users: users, length: totalUsers });
+    } catch (error) {
+      res.status(500).json({ message: error.message });
     }
-
-    if (timeCreatedGTE) {
-      searchQuery.createdAt = { $gte: new Date(timeCreatedGTE) };
-    }
-    if (timeCreatedLTE) {
-      searchQuery.createdAt = { $lte: new Date(timeCreatedLTE) };
-    }
-
-    const pageSize = limit ? Number(limit) : 30;
-    const skip = (pageNumber - 1) * pageSize;
-
-    const totalUsers = await User.countDocuments(searchQuery);
-    const users = await User.find(searchQuery)
-      .select("-password")
-      .skip(skip)
-      .limit(pageSize)
-      .sort({ createdAt: desc === "true" ? -1 : 1 });
-
-    res.json({ users: users, length: totalUsers });
   }),
 );
 
@@ -250,12 +270,16 @@ userRouter.get(
     /**
      * get a user by their ID
      */
-    const user = await User.findById(req.params.id).select("-password");
+    try {
+      const user = await User.findById(req.params.id).select("-password");
 
-    if (user) {
-      res.json(user);
-    } else {
-      res.status(404).json({ message: "User not found" });
+      if (user) {
+        res.json(user);
+      } else {
+        res.status(404).json({ message: "User not found" });
+      }
+    } catch (error) {
+      res.status(500).json({ message: error.message });
     }
   }),
 );
@@ -268,17 +292,21 @@ userRouter.delete(
     /**
      * Delete a user by their ID
      */
-    const user = await User.findById(req.params.id);
+    try {
+      const user = await User.findById(req.params.id);
 
-    if (user) {
-      if (user.isAdmin === true) {
-        res.status(403).json({ message: "Admin user cannot be deleted" });
+      if (user) {
+        if (user.isAdmin === true) {
+          res.status(403).json({ message: "Admin user cannot be deleted" });
+        } else {
+          await User.deleteOne({ _id: req.params.id });
+          res.json({ message: "User deleted" });
+        }
       } else {
-        await User.deleteOne({ _id: req.params.id });
-        res.json({ message: "User deleted" });
+        res.status(404).json({ message: "User not found" });
       }
-    } else {
-      res.status(404).json({ message: "User not found" });
+    } catch (error) {
+      res.status(500).json({ message: error.message });
     }
   }),
 );
@@ -294,70 +322,69 @@ userRouter.post(
      * use this endpoint to login a user and at the end send them back a auto generated hash token which last in a short period to keep them logged in
      */
 
-    const SigninFormValues = req.body.values;
-    const validateEmail = emailValidator.parse(SigninFormValues.email);
+    try {
+      const SigninFormValues = req.body.values;
+      const validateEmail = emailValidator.parse(SigninFormValues.email);
 
-    if (!validateEmail) {
-      return res.status(400).json({
-        message: validateEmail,
-      });
-    }
-    const user = await User.findOne({ email: SigninFormValues.email });
-
-    if (user) {
-      if (bcrypt.compareSync(SigninFormValues.password, user.password)) {
-        res.status(201).json({
-          username: user.username,
-          isCreator: user.isCreator,
-          isAdmin: user.isAdmin,
-          token: generateToken(user),
+      if (!validateEmail) {
+        return res.status(400).json({
+          message: validateEmail,
         });
-        return;
       }
+      const user = await User.findOne({ email: SigninFormValues.email });
+
+      if (user) {
+        if (bcrypt.compareSync(SigninFormValues.password, user.password)) {
+          res.status(201).json({
+            username: user.username,
+            isCreator: user.isCreator,
+            isAdmin: user.isAdmin,
+            token: generateToken(user),
+          });
+          return;
+        }
+      }
+      res.status(401).json({ message: "Email or Password is Wrong!" });
+    } catch (error) {
+      res.status(500).json({ message: error.message });
     }
-    res.status(401).json({ message: "Email or Password is Wrong!" });
   }),
 );
 
 userRouter.post(
   "/signup",
   expressAsyncHandler(async (req, res) => {
-    const SignupFormValues = req.body.values;
+    try {
+      const SignupFormValues = req.body.values;
 
-    const validatePassword = passwordValidator.parse(SignupFormValues.password);
-    const validateEmail = emailValidator.parse(SignupFormValues.email.trim());
-    const validatePhone = phoneValidator.parse(SignupFormValues.phone.trim());
+      const validatePassword = passwordValidator.parse(
+        SignupFormValues.password,
+      );
 
-    if (!validatePassword)
-      return res.status(400).json({
-        message: validatePassword,
+      if (!validatePassword)
+        return res.status(400).json({
+          message: validatePassword,
+        });
+
+      const newUser = new User({
+        firstName: SignupFormValues.firstName.trim(),
+        lastName: SignupFormValues.lastName.trim(),
+        username: SignupFormValues.username.trim(),
+        email: SignupFormValues.email.trim(),
+        countryCode: SignupFormValues.countryCode.trim(),
+        phone: SignupFormValues.phone.trim(),
+        password: bcrypt.hashSync(SignupFormValues.password),
       });
-    if (!validateEmail) {
-      return res.status(400).json({
-        message: validateEmail,
+      const user = await newUser.save();
+      res.status(201).json({
+        username: user.username,
+        isCreator: user.isCreator,
+        isAdmin: user.isAdmin,
+        token: generateToken(user),
       });
+    } catch (error) {
+      res.status(500).json({ message: error.message });
     }
-    if (!validatePhone) {
-      return res.status(400).json({
-        message: validatePhone,
-      });
-    }
-    const newUser = new User({
-      firstName: SignupFormValues.firstName.trim(),
-      lastName: SignupFormValues.lastName.trim(),
-      username: SignupFormValues.username.trim(),
-      email: SignupFormValues.email.trim(),
-      countryCode: SignupFormValues.countryCode.trim(),
-      phone: SignupFormValues.phone.trim(),
-      password: bcrypt.hashSync(SignupFormValues.password),
-    });
-    const user = await newUser.save();
-    res.status(201).json({
-      username: user.username,
-      isCreator: user.isCreator,
-      isAdmin: user.isAdmin,
-      token: generateToken(user),
-    });
   }),
 );
 
@@ -378,16 +405,20 @@ userRouter.post(
   isAuth,
   isAdmin,
   expressAsyncHandler(async (req, res) => {
-    const user = await User.findById(req.params.id);
-    const status = req.body.status;
-    if (user) {
-      user.status.push(status);
-      const updatedUser = await user.save();
-      res
-        .status(200)
-        .json({ message: "User status updated", user: updatedUser });
-    } else {
-      res.status(404).json({ message: "User not found" });
+    try {
+      const user = await User.findById(req.params.id);
+      const status = req.body.status;
+      if (user) {
+        user.status.push(status);
+        const updatedUser = await user.save();
+        res
+          .status(200)
+          .json({ message: "User status updated", user: updatedUser });
+      } else {
+        res.status(404).json({ message: "User not found" });
+      }
+    } catch (error) {
+      res.status(500).json({ message: error.message });
     }
   }),
 );
@@ -397,17 +428,21 @@ userRouter.put(
   isAuth,
   isAdmin,
   expressAsyncHandler(async (req, res) => {
-    const user = await User.findById(req.params.id);
-    const status = req.body.status;
-    if (user) {
-      user.status.id(req.params.statusId).value = status.value;
-      user.status.id(req.params.statusId).description = status.description;
-      const updatedUser = await user.save();
-      res
-        .status(200)
-        .json({ message: "User status updated", user: updatedUser });
-    } else {
-      res.status(404).json({ message: "User not found" });
+    try {
+      const user = await User.findById(req.params.id);
+      const status = req.body.status;
+      if (user) {
+        user.status.id(req.params.statusId).value = status.value;
+        user.status.id(req.params.statusId).description = status.description;
+        const updatedUser = await user.save();
+        res
+          .status(200)
+          .json({ message: "User status updated", user: updatedUser });
+      } else {
+        res.status(404).json({ message: "User not found" });
+      }
+    } catch (error) {
+      res.status(500).json({ message: error.message });
     }
   }),
 );
@@ -417,16 +452,20 @@ userRouter.post(
   isAuth,
   isAdmin,
   expressAsyncHandler(async (req, res) => {
-    const user = await User.findById(req.params.id);
-    const notification = req.body.notification;
-    if (user) {
-      user.notifications.push(notification);
-      const updatedUser = await user.save();
-      res.status(200).json({
-        message: "User notification updated",
-      });
-    } else {
-      res.status(404).json({ message: "User not found" });
+    try {
+      const user = await User.findById(req.params.id);
+      const notification = req.body.notification;
+      if (user) {
+        user.notifications.push(notification);
+        await user.save();
+        res.status(200).json({
+          message: "User notification updated",
+        });
+      } else {
+        res.status(404).json({ message: "User not found" });
+      }
+    } catch (error) {
+      res.status(500).json({ message: error.message });
     }
   }),
 );

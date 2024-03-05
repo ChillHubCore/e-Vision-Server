@@ -117,6 +117,8 @@ productRouter.get(
         desc = "false",
         name,
         brand,
+        slug,
+        id,
         category,
         timeCreatedGTE,
         timeCreatedLTE,
@@ -140,6 +142,12 @@ productRouter.get(
         if (timeCreatedLTE) {
           searchQuery.createdAt.$lte = new Date(timeCreatedLTE);
         }
+      }
+      if (slug) {
+        searchQuery.slug = slug;
+      }
+      if (id) {
+        searchQuery._id = id;
       }
 
       const pageSize = limit ? Number(limit) : 30;

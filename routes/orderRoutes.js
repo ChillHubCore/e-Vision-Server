@@ -24,6 +24,7 @@ orderRouter.get(
   isCreator,
   expressAsyncHandler(async (req, res) => {
     const {
+      id,
       pageNumber = 1,
       limit,
       desc = "false",
@@ -172,6 +173,9 @@ orderRouter.get(
         $regex: promotions,
         $options: "i",
       };
+    }
+    if (id) {
+      searchQuery._id = id;
     }
 
     const pageSize = limit ? Number(limit) : 30;

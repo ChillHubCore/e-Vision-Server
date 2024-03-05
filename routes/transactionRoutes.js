@@ -24,6 +24,10 @@ transactionRouter.get(
       limit,
       desc = "false",
       status,
+      id,
+      order,
+      user,
+      creator,
       username,
       timeCreatedGTE,
       timeCreatedLTE,
@@ -40,6 +44,19 @@ transactionRouter.get(
       if (timeCreatedLTE) {
         searchQuery.createdAt.$lte = timeCreatedLTE;
       }
+    }
+
+    if (id) {
+      searchQuery._id = id;
+    }
+    if (order) {
+      searchQuery.order = order;
+    }
+    if (user) {
+      searchQuery.user = user;
+    }
+    if (creator) {
+      searchQuery.creator = creator;
     }
 
     const pageSize = limit ? Number(limit) : 30;
@@ -111,6 +128,14 @@ transactionRouter.post(
   isAdmin,
   expressAsyncHandler(async (req, res) => {
     const TransactionFormData = req.body.values;
+    const user = await User.findById(Transaction.user);
+    if (!user) {
+      return res.status(404).send({ message: "User Not Found" });
+    }
+    const order = await Order.findById(Transaction.order);
+    if (!order) {
+      return res.status(404).send({ message: "Order Not Found" });
+    }
     try {
       const transaction = new Transaction({
         user: TransactionFormData.user,

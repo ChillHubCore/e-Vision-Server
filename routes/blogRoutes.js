@@ -2,6 +2,7 @@ import express from "express";
 import expressAsyncHandler from "express-async-handler";
 import { isAuth, isCreator } from "../utils.js";
 import Blog from "../models/blogModel.js";
+import { zeroEmptySpaceValidator } from "../validators/inputValidators.js";
 
 const blogRouter = express.Router();
 
@@ -10,6 +11,7 @@ blogRouter.get(
   expressAsyncHandler(async (req, res) => {
     const {
       id,
+      slug,
       pageNumber = 1,
       limit,
       desc = "false",
@@ -34,6 +36,9 @@ blogRouter.get(
     if (id) {
       searchQuery._id = id;
     }
+    if (slug) {
+      searchQuery.slug = slug;
+    }
     const pageSize = limit ? Number(limit) : 30;
     const skip = (pageNumber - 1) * pageSize;
 
@@ -56,14 +61,20 @@ blogRouter.post(
   isAuth,
   isCreator,
   expressAsyncHandler(async (req, res) => {
-    const { title, content, metaTitle, metaDescription, metaTags } =
+    const { title, content, metaTitle, metaDescription, metaTags, slug } =
       req.body.values;
+    const validateSlug = zeroEmptySpaceValidator.safeParse(slug);
+    if (!validateSlug) {
+      res.status(400).json({ message: "Invalid Slug" });
+      return;
+    }
     const blog = new Blog({
       metaTitle,
       metaDescription,
       metaTags,
       title,
       content,
+      slug,
       author: req.user._id,
     });
     const createdBlog = await blog.save();
@@ -74,9 +85,18 @@ blogRouter.post(
 blogRouter.put(
   "/:id",
   isAuth,
+  isCreator,
   expressAsyncHandler(async (req, res) => {
     const blogId = req.params.id;
     const blog = await Blog.findById(blogId);
+    const validateSlug = zeroEmptySpaceValidator.safeParse(
+      req.body.values.slug,
+    );
+    console.log(validateSlug);
+    if (!validateSlug.success) {
+      res.status(400).json({ message: "Invalid Slug" });
+      return;
+    }
     if (blog) {
       if (
         blog.author.toString() !== req.user._id.toString() &&
@@ -90,6 +110,7 @@ blogRouter.put(
         blog.metaTags = req.body.values.metaTags || blog.metaTags;
         blog.title = req.body.values.title || blog.title;
         blog.content = req.body.values.content || blog.content;
+        blog.slug = req.body.values.slug || blog.slug;
         const updatedBlog = await blog.save();
         res.json(updatedBlog);
       }

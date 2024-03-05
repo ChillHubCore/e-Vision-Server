@@ -1,4 +1,8 @@
 import mongoose from "mongoose";
+import {
+  emailValidator,
+  phoneValidator,
+} from "../validators/userValidators.js";
 
 const notificationSchema = new mongoose.Schema(
   {
@@ -57,21 +61,49 @@ const userSchema = new mongoose.Schema(
       unique: true,
       minLength: 3,
       maxLength: 255,
+      validate: {
+        validator: function (value) {
+          return emailValidator.safeParse(value).success;
+        },
+        message: "Invalid email format.",
+      },
     },
     countryCode: {
       type: String,
       required: true,
     },
+    birthDate: { type: Date, required: true },
     phone: {
       type: String,
       required: true,
       unique: true,
+      validate: {
+        validator: function (value) {
+          return phoneValidator.safeParse(value).success;
+        },
+      },
     },
     password: { type: String, required: true },
     isEmailVerified: { type: Boolean, required: true, default: false },
     isPhoneVerified: { type: Boolean, required: true, default: false },
     isCreator: { type: Boolean, default: false, required: true },
     isAdmin: { type: Boolean, default: false, required: true },
+    role: {
+      type: String,
+      required: true,
+      enum: [
+        "user",
+        "owner",
+        "creator",
+        "admin",
+        "support",
+        "super-admin",
+        "moderator",
+      ],
+      default: "user",
+    },
+    loyaltyPoints: { type: Number, default: 0, required: true },
+    shopTokenBalance: { type: Number, default: 0, required: true },
     watchList: [
       {
         type: mongoose.Schema.Types.ObjectId,

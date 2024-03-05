@@ -63,11 +63,7 @@ blogRouter.post(
   expressAsyncHandler(async (req, res) => {
     const { title, content, metaTitle, metaDescription, metaTags, slug } =
       req.body.values;
-    const validateSlug = zeroEmptySpaceValidator.safeParse(slug);
-    if (!validateSlug) {
-      res.status(400).json({ message: "Invalid Slug" });
-      return;
-    }
+
     const blog = new Blog({
       metaTitle,
       metaDescription,
@@ -89,14 +85,7 @@ blogRouter.put(
   expressAsyncHandler(async (req, res) => {
     const blogId = req.params.id;
     const blog = await Blog.findById(blogId);
-    const validateSlug = zeroEmptySpaceValidator.safeParse(
-      req.body.values.slug,
-    );
-    console.log(validateSlug);
-    if (!validateSlug.success) {
-      res.status(400).json({ message: "Invalid Slug" });
-      return;
-    }
+
     if (blog) {
       if (
         blog.author.toString() !== req.user._id.toString() &&

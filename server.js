@@ -17,6 +17,7 @@ import appRouter from "./routes/appRoutes.js";
 import orderRouter from "./routes/orderRoutes.js";
 import transactionRouter from "./routes/transactionRoutes.js";
 import blogRouter from "./routes/blogRoutes.js";
+import promotionRoutes from "./routes/promotionRoutes.js";
 
 console.log("Running " + process.env.SERVER_NAME);
 
@@ -64,6 +65,7 @@ app.use("/app", appRouter);
 app.use("/order", orderRouter);
 app.use("/transaction", transactionRouter);
 app.use("/blogs", blogRouter);
+app.use("/promotions", promotionRoutes);
 
 const fallbackPort = 5000;
 

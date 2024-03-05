@@ -2,14 +2,6 @@ import mongoose from "mongoose";
 
 const variantSchema = new mongoose.Schema(
   {
-    metaTitle: {
-      type: String,
-      required: true,
-    },
-    metaTags: {
-      type: [String],
-      required: true,
-    },
     images: { type: [String], required: true }, // Array of product images
     details: [
       {
@@ -52,6 +44,18 @@ const variantSchema = new mongoose.Schema(
 
 const productSchema = new mongoose.Schema(
   {
+    metaTitle: {
+      type: String,
+      required: true,
+    },
+    metaDescription: {
+      type: String,
+      required: true,
+    },
+    metaTags: {
+      type: [String],
+      required: true,
+    },
     name: { type: String, required: true, minlength: 3, maxlength: 255 },
     slug: {
       type: String,

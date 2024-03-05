@@ -18,6 +18,9 @@ productRouter.post(
 
       const newProduct = new Product({
         name: CreateProductFormValues.name.trim(),
+        metaTitle: CreateProductFormValues.metaTitle.trim(),
+        metaDescription: CreateProductFormValues.metaDescription.trim(),
+        metaTags: CreateProductFormValues.metaTags,
         slug: CreateProductFormValues.slug.trim().replace(/\s+/g, "-"),
         brand: CreateProductFormValues.brand.trim(),
         category: CreateProductFormValues.category.trim(),
@@ -33,7 +36,7 @@ productRouter.post(
         product: product,
       });
     } catch (error) {
-      res.status(500).json({ message: "Internal Server Error" });
+      res.status(500).json({ message: "Internal Server Error", error });
     }
   }),
 );
@@ -52,6 +55,15 @@ productRouter.put(
         if (req.user.isAdmin || product.creator === req.user._id) {
           if (CreateProductFormValues.name) {
             product.name = CreateProductFormValues.name;
+          }
+          if (CreateProductFormValues.metaTitle) {
+            product.metaTitle = CreateProductFormValues.metaTitle;
+          }
+          if (CreateProductFormValues.metaDescription) {
+            product.metaDescription = CreateProductFormValues.metaDescription;
+          }
+          if (CreateProductFormValues.metaTags) {
+            product.metaTags = CreateProductFormValues.metaTags;
           }
           if (CreateProductFormValues.slug) {
             product.slug = CreateProductFormValues.slug;
@@ -85,7 +97,7 @@ productRouter.put(
         res.status(404).send({ message: "Product not found" });
       }
     } catch (error) {
-      res.status(500).json({ message: "Internal Server Error" });
+      res.status(500).json({ message: "Internal Server Error", error });
     }
   }),
 );

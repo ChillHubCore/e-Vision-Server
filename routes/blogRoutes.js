@@ -56,8 +56,12 @@ blogRouter.post(
   isAuth,
   isCreator,
   expressAsyncHandler(async (req, res) => {
-    const { title, content } = req.body.values;
+    const { title, content, metaTitle, metaDescription, metaTags } =
+      req.body.values;
     const blog = new Blog({
+      metaTitle,
+      metaDescription,
+      metaTags,
       title,
       content,
       author: req.user._id,
@@ -80,6 +84,10 @@ blogRouter.put(
       ) {
         res.status(401).json({ message: "Not authorized" });
       } else {
+        blog.metaTitle = req.body.values.metaTitle || blog.metaTitle;
+        blog.metaDescription =
+          req.body.values.metaDescription || blog.metaDescription;
+        blog.metaTags = req.body.values.metaTags || blog.metaTags;
         blog.title = req.body.values.title || blog.title;
         blog.content = req.body.values.content || blog.content;
         const updatedBlog = await blog.save();

@@ -6,6 +6,10 @@ const blogSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    metaDescription: {
+      type: String,
+      required: true,
+    },
     metaTags: {
       type: [String],
       required: true,

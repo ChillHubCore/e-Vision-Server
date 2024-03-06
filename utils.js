@@ -81,3 +81,18 @@ export const isCreator = (req, res, next) => {
     res.status(401).send({ message: "You Are Not a Creator!" });
   }
 };
+
+export const isSupport = (req, res, next) => {
+  if (
+    req.user.role === "support" ||
+    req.user.role === "admin" ||
+    req.user.role === "super-admin" ||
+    req.user.role === "moderator" ||
+    req.user.isAdmin ||
+    req.user.isCreator
+  ) {
+    next();
+  } else {
+    res.status(401).send({ message: "You Do Not Have Support Access" });
+  }
+};

@@ -163,7 +163,7 @@ userRouter.get(
         email,
         countryCode,
         phone,
-        pageNumber,
+        pageNumber = 1,
         limit,
         birthDateGTE,
         birthDateLTE,
@@ -223,8 +223,8 @@ userRouter.get(
       if (birthDateLTE !== undefined && birthDateLTE.trim() !== "") {
         searchQuery.birthDate = { $lte: new Date(birthDateLTE) };
       }
-      if (role !== undefined && role.trim() !== "") {
-        searchQuery.role = role;
+      if (role !== undefined && !isNaN(parseInt(role))) {
+        searchQuery["role.value"] = { $gte: parseInt(role) };
       }
       if (loyaltyPointsGTE !== undefined && loyaltyPointsGTE.trim() !== "") {
         searchQuery.loyaltyPoints = { $gte: loyaltyPointsGTE };
@@ -244,11 +244,10 @@ userRouter.get(
       ) {
         searchQuery.shopTokenBalance = { $lte: shopTokenBalanceLTE };
       }
-
-      const pageSize = limit ? Number(limit) : 30;
+      const totalUsers = await User.countDocuments(searchQuery);
+      const pageSize = limit ? Number(limit) : totalUsers;
       const skip = (pageNumber - 1) * pageSize;
 
-      const totalUsers = await User.countDocuments(searchQuery);
       const users = await User.find(searchQuery)
         .select("-password")
         .skip(skip)

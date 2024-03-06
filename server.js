@@ -64,8 +64,8 @@ app.use("/product", productRouter);
 app.use("/app", appRouter);
 app.use("/order", orderRouter);
 app.use("/transaction", transactionRouter);
-app.use("/blogs", blogRouter);
-app.use("/promotions", promotionRoutes);
+app.use("/blog", blogRouter);
+app.use("/promotion", promotionRoutes);
 
 const fallbackPort = 5000;
 

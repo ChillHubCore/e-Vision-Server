@@ -16,6 +16,8 @@ promotionRoutes.get(
       active,
       activeFrom,
       activeUntil,
+      timeCreatedGTE,
+      timeCreatedLTE,
       desc = "false",
     } = req.query;
     const searchQuery = {};
@@ -31,20 +33,29 @@ promotionRoutes.get(
         $options: "i",
       };
     }
-    if (activeFrom || activeUntil) {
+    if (activeFrom) {
+      searchQuery.activeFrom = new Date(activeFrom);
+    }
+    if (activeUntil) {
+      searchQuery.activeUntil = new Date(activeUntil);
+    }
+
+    if (timeCreatedGTE || timeCreatedLTE) {
       searchQuery.createdAt = {};
-      if (activeFrom) {
-        searchQuery.createdAt.$gte = new Date(activeFrom);
+      if (timeCreatedGTE) {
+        searchQuery.createdAt.$gte = new Date(timeCreatedGTE);
       }
-      if (activeUntil) {
-        searchQuery.createdAt.$lte = new Date(activeUntil);
+      if (timeCreatedLTE) {
+        searchQuery.createdAt.$lte = new Date(timeCreatedLTE);
       }
     }
 
     try {
-      const promotions = await Promotion.find(searchQuery).sort({
-        createdAt: desc === "true" ? -1 : 1,
-      });
+      const promotions = await Promotion.find(searchQuery)
+        .populate("applicableProducts.product")
+        .sort({
+          createdAt: desc === "true" ? -1 : 1,
+        });
 
       res.send(promotions);
     } catch (error) {
@@ -59,6 +70,7 @@ promotionRoutes.post(
   isAdmin,
   expressAsyncHandler(async (req, res) => {
     try {
+      console.log(req.body);
       const {
         promotionIdentifier,
         description,
@@ -69,7 +81,11 @@ promotionRoutes.post(
         maximumDiscount,
         minTotalOrder,
         applicableProducts,
+        accessibleRoles,
+        percentageDiscount,
+        fixedDiscount,
       } = req.body.values;
+
       const promotion = new Promotion({
         promotionIdentifier,
         description,
@@ -78,8 +94,11 @@ promotionRoutes.post(
         activeUntil: new Date(activeUntil),
         usageCap,
         maximumDiscount,
+        accessibleRoles,
         minTotalOrder,
         applicableProducts,
+        percentageDiscount,
+        fixedDiscount,
         creator: req.user._id,
       });
       const createdPromotion = await promotion.save();
@@ -107,22 +126,55 @@ promotionRoutes.put(
         maximumDiscount,
         minTotalOrder,
         applicableProducts,
+        percentageDiscount,
+        fixedDiscount,
       } = req.body.values;
       const promotion = await Promotion.findById(promotionId);
       if (promotion) {
-        promotion.promotionIdentifier =
-          promotionIdentifier || promotion.promotionIdentifier;
-        promotion.description = description || promotion.description;
-        promotion.active = active || promotion.active;
-        promotion.activeFrom = new Date(activeFrom) || promotion.activeFrom;
-        promotion.activeUntil = new Date(activeUntil) || promotion.activeUntil;
-        promotion.usageCap = usageCap || promotion.usageCap;
-        promotion.maximumDiscount =
-          maximumDiscount || promotion.maximumDiscount;
-        promotion.minTotalOrder = minTotalOrder || promotion.minTotalOrder;
-        promotion.applicableProducts =
-          applicableProducts || promotion.applicableProducts;
-        const updatedPromotion = await promotion.save();
+        const updatedPromotion = await Promotion.findByIdAndUpdate(
+          {
+            _id: promotionId,
+          },
+          {
+            promotionIdentifier:
+              promotionIdentifier !== undefined
+                ? promotionIdentifier
+                : promotion.promotionIdentifier,
+            description:
+              description !== undefined ? description : promotion.description,
+            active: active !== undefined ? active : promotion.active,
+            activeFrom:
+              activeFrom !== undefined
+                ? new Date(activeFrom)
+                : promotion.activeFrom,
+            activeUntil:
+              activeUntil !== undefined
+                ? new Date(activeUntil)
+                : promotion.activeUntil,
+            usageCap: usageCap !== undefined ? usageCap : promotion.usageCap,
+            maximumDiscount:
+              maximumDiscount !== undefined
+                ? maximumDiscount
+                : promotion.maximumDiscount,
+            minTotalOrder:
+              minTotalOrder !== undefined
+                ? minTotalOrder
+                : promotion.minTotalOrder,
+            applicableProducts:
+              applicableProducts !== undefined
+                ? applicableProducts
+                : promotion.applicableProducts,
+            percentageDiscount:
+              percentageDiscount !== undefined
+                ? percentageDiscount
+                : promotion.percentageDiscount,
+            fixedDiscount:
+              fixedDiscount !== undefined
+                ? fixedDiscount
+                : promotion.fixedDiscount,
+          },
+          { new: true },
+        );
         res.send({ message: "Promotion Updated", promotion: updatedPromotion });
       } else {
         res.status(404).send({ message: "Promotion Not Found" });
@@ -142,7 +194,7 @@ promotionRoutes.delete(
       const promotionId = req.params.id;
       const promotion = await Promotion.findById(promotionId);
       if (promotion) {
-        const deletedPromotion = await promotion.remove();
+        const deletedPromotion = await Promotion.findByIdAndDelete(promotionId);
         res.send({ message: "Promotion Deleted", promotion: deletedPromotion });
       } else {
         res.status(404).send({ message: "Promotion Not Found" });

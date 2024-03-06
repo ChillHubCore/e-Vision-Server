@@ -9,9 +9,20 @@ const promotionSchema = new mongoose.Schema(
     },
     applicableProducts: [
       {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Product",
-        required: true,
+        product: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Product",
+          required: true,
+        },
+        variant: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Variant",
+          required: true,
+        },
+        quantity: {
+          type: Number,
+          required: true,
+        },
       },
     ],
     creator: {
@@ -28,6 +39,7 @@ const promotionSchema = new mongoose.Schema(
       price: {
         type: Number,
         required: true,
+        default: 0,
       },
     },
     accessibleRoles: {
@@ -43,6 +55,7 @@ const promotionSchema = new mongoose.Schema(
       price: {
         type: Number,
         required: true,
+        default: 0,
       },
     },
     description: {
@@ -80,18 +93,43 @@ const promotionSchema = new mongoose.Schema(
           type: Number,
           required: true,
           default: 0,
-          validate: {
-            validator: function (value) {
-              // Ensure timesUsed is less than maxTimesToUse
-              return this.usageCap.maxTimesToUse > value;
-            },
-            message: "times Used must be less than maxTimesToUse",
-          },
         },
         maxTimesToUse: {
           type: Number,
           required: true,
+          default: 0,
         },
+      },
+    },
+    percentageDiscount: {
+      active: {
+        type: Boolean,
+        required: true,
+        default: false,
+      },
+      percentage: {
+        default: 0,
+        type: Number,
+        required: true,
+        validate: {
+          validator: function (value) {
+            // Ensure percentage is less than 100
+            return value < 100;
+          },
+          message: "percentage must be less than 100",
+        },
+      },
+    },
+    fixedDiscount: {
+      active: {
+        type: Boolean,
+        required: true,
+        default: false,
+      },
+      price: {
+        default: 0,
+        type: Number,
+        required: true,
       },
     },
   },

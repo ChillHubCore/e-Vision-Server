@@ -116,7 +116,7 @@ blogRouter.delete(
   expressAsyncHandler(async (req, res) => {
     const blog = await Blog.findById(req.params.id);
     if (blog) {
-      const deletedBlog = await blog.remove();
+      const deletedBlog = await Blog.findByIdAndDelete(req.params.id);
       res.json(deletedBlog);
     } else {
       res.status(404).json({ message: "Blog Not Found" });

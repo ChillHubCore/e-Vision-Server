@@ -67,7 +67,7 @@ app.use("/order", orderRouter);
 app.use("/transaction", transactionRouter);
 app.use("/blog", blogRouter);
 app.use("/promotion", promotionRoutes);
-app.use('/ticket', ticketRoutes);
+app.use("/ticket", ticketRoutes);
 
 const fallbackPort = 5000;
 

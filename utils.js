@@ -83,16 +83,25 @@ export const isCreator = (req, res, next) => {
 };
 
 export const isSupport = (req, res, next) => {
-  if (
-    req.user.role === "support" ||
-    req.user.role === "admin" ||
-    req.user.role === "super-admin" ||
-    req.user.role === "moderator" ||
-    req.user.isAdmin ||
-    req.user.isCreator
-  ) {
+  if (req.user.role.value > 1 || req.user.isAdmin || req.user.isCreator) {
     next();
   } else {
     res.status(401).send({ message: "You Do Not Have Support Access" });
+  }
+};
+
+export const isModerator = (req, res, next) => { 
+  if (req.user.role.value > 2 || req.user.isAdmin || req.user.isCreator) {
+    next();
+  } else {
+    res.status(401).send({ message: "You Do Not Have Moderator Access" });
+  }
+};
+
+export const isSuperAdmin = (req, res, next) => { 
+  if (req.user.role.value > 5 || req.user.isAdmin || req.user.isCreator) {
+    next();
+  } else {
+    res.status(401).send({ message: "You Do Not Have Super Admin Access" });
   }
 };

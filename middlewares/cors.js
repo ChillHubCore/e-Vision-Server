@@ -5,12 +5,12 @@ import process from "process";
 
 dotenv.config();
 // Allow a specific address to access the server (replace with the actual addresses)
-console.log("Running CORS Middleware...");
-const allowedOrigin = [
-  `${process.env.allowedOrigin}`,
-  `${process.env.serverOrigin}`,
-];
-console.log("Serving For " + allowedOrigin);
+// console.log("Running CORS Middleware...");
+// const allowedOrigin = [
+//   `${process.env.allowedOrigin}`,
+//   `${process.env.serverOrigin}`,
+// ];
+// console.log("Serving For " + allowedOrigin);
 /**
  * Configuration options for CORS (Cross-Origin Resource Sharing).
  * @typedef {Object} CorsOptions
@@ -19,7 +19,7 @@ console.log("Serving For " + allowedOrigin);
  * @property {boolean} credentials - Whether to allow cookies and authentication headers in CORS requests.
  */
 const corsOptions = {
-  origin: allowedOrigin,
+  origin: "*",
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
   credentials: true, // Allow cookies and authentication headers
 };

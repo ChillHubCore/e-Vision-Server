@@ -13,6 +13,7 @@ export const generateToken = (user) => {
       isCreator: user.isCreator,
       isEmailVerified: user.isEmailVerified,
       isPhoneVerified: user.isPhoneVerified,
+      role: user.role,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
     },
@@ -90,7 +91,7 @@ export const isSupport = (req, res, next) => {
   }
 };
 
-export const isModerator = (req, res, next) => { 
+export const isModerator = (req, res, next) => {
   if (req.user.role.value > 2 || req.user.isAdmin || req.user.isCreator) {
     next();
   } else {
@@ -98,7 +99,7 @@ export const isModerator = (req, res, next) => {
   }
 };
 
-export const isSuperAdmin = (req, res, next) => { 
+export const isSuperAdmin = (req, res, next) => {
   if (req.user.role.value > 5 || req.user.isAdmin || req.user.isCreator) {
     next();
   } else {

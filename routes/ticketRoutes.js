@@ -44,30 +44,8 @@ ticketRoutes.get(
 
     try {
       const tickets = await Ticket.find(searchQuery)
-        .populate("createdBy _id username")
-        .populate("assignedTo _id username")
-        .populate("closedBy _id username");
-
-      const filteredTickets = tickets.filter(
-        (ticket) =>
-          ticket.createdBy.username
-            .toLowerCase()
-            .includes(createdBy.toLowerCase()) ||
-          ticket.assignedTo.username
-            .toLowerCase()
-            .includes(assignedTo.toLowerCase()) ||
-          ticket.closedBy.username
-            .toLowerCase()
-            .includes(closedBy.toLowerCase()),
-      );
-
-      const sortedFilteredTickets = filteredTickets.sort((a, b) => {
-        if (desc === "true") {
-          return a.createdAt > b.createdAt ? -1 : 1;
-        } else {
-          return a.createdAt < b.createdAt ? -1 : 1;
-        }
-      });
+        .populate("createdBy", "username _id")
+        .populate("assignedTo", "username _id");
 
       res.send(sortedFilteredTickets);
     } catch (err) {

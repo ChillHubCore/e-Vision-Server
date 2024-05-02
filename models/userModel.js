@@ -72,6 +72,11 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    profilePicture: {
+      type: String,
+      required: false,
+      default: "https://via.placeholder.com/150",
+    },
     birthDate: { type: Date, required: true },
     phone: {
       type: String,
@@ -88,6 +93,7 @@ const userSchema = new mongoose.Schema(
     isPhoneVerified: { type: Boolean, required: true, default: false },
     isCreator: { type: Boolean, default: false, required: true },
     isAdmin: { type: Boolean, default: false, required: true },
+    isTeamMember: { type: Boolean, default: false, required: true },
     role: {
       type: {
         label: String,
@@ -97,12 +103,9 @@ const userSchema = new mongoose.Schema(
       required: true,
       enum: [
         { label: "User", value: 1 },
-        { label: "Support", value: 2 },
-        { label: "Moderator", value: 3 },
-        { label: "Creator", value: 4 },
-        { label: "Admin", value: 5 },
-        { label: "Super Admin", value: 6 },
-        { label: "Owner", value: 7 },
+        { label: "TeamMember", value: 2 },
+        { label: "Support", value: 3 },
+        { label: "Moderator", value: 4 },
       ],
       default: { label: "User", value: 1 },
     },

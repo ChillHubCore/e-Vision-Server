@@ -1,8 +1,7 @@
 import express from "express";
 import expressAsyncHandler from "express-async-handler";
-import { isAuth, isCreator } from "../utils.js";
+import { isAuth, isCreator, isTeamMember } from "../utils.js";
 import Blog from "../models/blogModel.js";
-import { zeroEmptySpaceValidator } from "../validators/inputValidators.js";
 
 const blogRouter = express.Router();
 
@@ -60,6 +59,7 @@ blogRouter.post(
   "/",
   isAuth,
   isCreator,
+  isTeamMember,
   expressAsyncHandler(async (req, res) => {
     const { title, content, metaTitle, metaDescription, metaTags, slug } =
       req.body.values;

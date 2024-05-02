@@ -52,12 +52,14 @@ userRouter.post(
         lastName: user.lastName,
         email: user.email,
         countryCode: user.countryCode,
+        birthDate: CreateUserFormValues.birthDate,
         phone: user.phone,
         username: user.username,
         isAdmin: user.isAdmin,
         isCreator: user.isCreator,
         isEmailVerified: user.isEmailVerified,
         isPhoneVerified: user.isPhoneVerified,
+        role: user.role,
       },
     });
   }),
@@ -128,6 +130,7 @@ userRouter.put(
       user.shopTokenBalance =
         EditUserFormValues.shopTokenBalance || user.shopTokenBalance;
       user.birthDate = EditUserFormValues.birthDate || user.birthDate;
+      user.role = EditUserFormValues.role || user.role;
 
       if (
         EditUserFormValues.password !== undefined &&
@@ -338,6 +341,9 @@ userRouter.post(
             username: user.username,
             isCreator: user.isCreator,
             isAdmin: user.isAdmin,
+            isEmailVerified: user.isEmailVerified,
+            isPhoneVerified: user.isPhoneVerified,
+            role: user.role,
             token: generateToken(user),
           });
           return;
@@ -370,6 +376,7 @@ userRouter.post(
         lastName: SignupFormValues.lastName.trim(),
         username: SignupFormValues.username.trim(),
         email: SignupFormValues.email.trim(),
+        birthDate: SignupFormValues.birthDate,
         countryCode: SignupFormValues.countryCode.trim(),
         phone: SignupFormValues.phone.trim(),
         password: bcrypt.hashSync(SignupFormValues.password),
@@ -379,6 +386,9 @@ userRouter.post(
         username: user.username,
         isCreator: user.isCreator,
         isAdmin: user.isAdmin,
+        isEmailVerified: user.isEmailVerified,
+        isPhoneVerified: user.isPhoneVerified,
+        role: user.role,
         token: generateToken(user),
       });
     } catch (error) {

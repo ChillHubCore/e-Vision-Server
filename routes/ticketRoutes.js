@@ -47,7 +47,7 @@ ticketRoutes.get(
         .populate("createdBy", "username _id")
         .populate("assignedTo", "username _id");
 
-      res.send(sortedFilteredTickets);
+      res.send(tickets);
     } catch (err) {
       res.status(400).send({ message: err.message });
     }

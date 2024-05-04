@@ -24,8 +24,10 @@ resumeRouter.post(
       languages,
       certifications,
       workSamples,
+      workExperience,
       active,
-    } = req.body;
+      hobbies,
+    } = req.body.values;
 
     const resume = new Resume({
       user: req.user._id,
@@ -37,13 +39,16 @@ resumeRouter.post(
       languages,
       certifications,
       workSamples,
+      workExperience,
       active,
+      hobbies,
     });
 
     try {
       const createdResume = await resume.save();
       res.status(201).json(createdResume);
     } catch (err) {
+      console.log(err);
       res.status(500).send({ error: err });
     }
   }),
@@ -72,16 +77,18 @@ resumeRouter.put(
       const resume = await Resume.findOne({ user: req.user._id });
 
       if (resume) {
-        resume.title = req.body.title || resume.title;
-        resume.description = req.body.description || resume.description;
-        resume.experience = req.body.experience || resume.experience;
-        resume.education = req.body.education || resume.education;
-        resume.skills = req.body.skills || resume.skills;
-        resume.languages = req.body.languages || resume.languages;
+        resume.title = req.body.values.title || resume.title;
+        resume.description = req.body.values.description || resume.description;
+        resume.education = req.body.values.education || resume.education;
+        resume.skills = req.body.values.skills || resume.skills;
+        resume.languages = req.body.values.languages || resume.languages;
         resume.certifications =
-          req.body.certifications || resume.certifications;
-        resume.workSamples = req.body.workSamples || resume.workSamples;
-        resume.active = req.body.active || resume.active;
+          req.body.values.certifications || resume.certifications;
+        resume.workSamples = req.body.values.workSamples || resume.workSamples;
+        resume.active = req.body.values.active || resume.active;
+        resume.workExperience =
+          req.body.values.workExperience || resume.workExperience;
+        resume.hobbies = req.body.values.hobbies || resume.hobbies;
 
         const updatedResume = await resume.save();
         res.status(200).send(updatedResume);

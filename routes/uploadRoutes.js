@@ -15,7 +15,7 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-const streamUpload = (req) => {
+const streamUploadCompressed = (req) => {
   return new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream((error, result) => {
       if (result) {
@@ -31,13 +31,40 @@ const streamUpload = (req) => {
   });
 };
 
+const streamUpload = (req) => {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream((error, result) => {
+      if (result) {
+        resolve(result);
+      } else {
+        reject(error);
+      }
+    });
+    streamifier.createReadStream(req.file.buffer).pipe(stream);
+  });
+};
+
+uploadRouter.post(
+  "/compressed",
+  isAuth,
+  upload.single("file"),
+  async (req, res) => {
+    try {
+      const result = await streamUploadCompressed(req);
+      res.send(result.secure_url);
+    } catch (error) {
+      console.error(error);
+      res.status(500).send("Error uploading file");
+    }
+  },
+);
+
 uploadRouter.post("/", isAuth, upload.single("file"), async (req, res) => {
   try {
     const result = await streamUpload(req);
     res.send(result.secure_url);
   } catch (error) {
     console.error(error);
-    console.error(`Error uploading file. Size: ${req.file.size} bytes`);
     res.status(500).send("Error uploading file");
   }
 });

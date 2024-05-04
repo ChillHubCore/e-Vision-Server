@@ -58,7 +58,6 @@ blogRouter.get(
 blogRouter.post(
   "/",
   isAuth,
-  isCreator,
   isTeamMember,
   expressAsyncHandler(async (req, res) => {
     const { title, content, metaTitle, metaDescription, metaTags, slug } =
@@ -81,28 +80,24 @@ blogRouter.post(
 blogRouter.put(
   "/:id",
   isAuth,
-  isCreator,
+  isTeamMember,
   expressAsyncHandler(async (req, res) => {
     const blogId = req.params.id;
-    const blog = await Blog.findById(blogId);
+    const blog =
+      req.user.isAdmin || req.user.isCreator
+        ? await Blog.findById(blogId)
+        : await Blog.findOne({ _id: blogId, author: req.user._id });
 
     if (blog) {
-      if (
-        blog.author.toString() !== req.user._id.toString() &&
-        !req.user.isAdmin
-      ) {
-        res.status(401).json({ message: "Not authorized" });
-      } else {
-        blog.metaTitle = req.body.values.metaTitle || blog.metaTitle;
-        blog.metaDescription =
-          req.body.values.metaDescription || blog.metaDescription;
-        blog.metaTags = req.body.values.metaTags || blog.metaTags;
-        blog.title = req.body.values.title || blog.title;
-        blog.content = req.body.values.content || blog.content;
-        blog.slug = req.body.values.slug || blog.slug;
-        const updatedBlog = await blog.save();
-        res.json(updatedBlog);
-      }
+      blog.metaTitle = req.body.values.metaTitle || blog.metaTitle;
+      blog.metaDescription =
+        req.body.values.metaDescription || blog.metaDescription;
+      blog.metaTags = req.body.values.metaTags || blog.metaTags;
+      blog.title = req.body.values.title || blog.title;
+      blog.content = req.body.values.content || blog.content;
+      blog.slug = req.body.values.slug || blog.slug;
+      const updatedBlog = await blog.save();
+      res.json(updatedBlog);
     } else {
       res.status(404).json({ message: "Blog Not Found" });
     }
@@ -112,9 +107,14 @@ blogRouter.put(
 blogRouter.delete(
   "/:id",
   isAuth,
-  isCreator,
+  isTeamMember,
   expressAsyncHandler(async (req, res) => {
-    const blog = await Blog.findById(req.params.id);
+    const blogId = req.params.id;
+    const blog =
+      req.user.isAdmin || req.user.isCreator
+        ? await Blog.findById(blogId)
+        : await Blog.findOne({ _id: blogId, author: req.user._id });
+
     if (blog) {
       const deletedBlog = await Blog.findByIdAndDelete(req.params.id);
       res.json(deletedBlog);

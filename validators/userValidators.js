@@ -10,5 +10,5 @@ export const emailValidator = z.string().email("Invalid email address");
 
 export const phoneValidator = z
   .string()
-  .min(11, "Invalid phone number")
+  .min(10, "Invalid phone number")
   .refine((value) => /^\d+$/.test(value), "Invalid phone number");

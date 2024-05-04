@@ -131,6 +131,8 @@ userRouter.put(
         EditUserFormValues.shopTokenBalance || user.shopTokenBalance;
       user.birthDate = EditUserFormValues.birthDate || user.birthDate;
       user.role = EditUserFormValues.role || user.role;
+      user.profilePicture =
+        EditUserFormValues.profilePicture || user.profilePicture;
 
       if (
         EditUserFormValues.password !== undefined &&
@@ -470,6 +472,85 @@ userRouter.post(
         res.status(200).json({
           message: "User notification updated",
         });
+      } else {
+        res.status(404).json({ message: "User not found" });
+      }
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  }),
+);
+
+userRouter.get(
+  "/mine/profile",
+  isAuth,
+  expressAsyncHandler(async (req, res) => {
+    try {
+      const user = await User.findById(req.user._id).select("-password");
+      if (user) {
+        res.status(200).json(user);
+      } else {
+        res.status(404).json({ message: "User not found" });
+      }
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  }),
+);
+
+userRouter.put(
+  "/mine/profile",
+  isAuth,
+  expressAsyncHandler(async (req, res) => {
+    try {
+      const user = await User.findById(req.user._id);
+      const EditUserFormValues = req.body.values;
+
+      if (user) {
+        if (
+          EditUserFormValues.password ||
+          EditUserFormValues.password.trim() !== ""
+        ) {
+          const validatePassword = passwordValidator.parse(
+            EditUserFormValues.password,
+          );
+          if (!validatePassword)
+            return res.status(400).json({
+              message: validatePassword,
+            });
+        }
+
+        user.firstName =
+          EditUserFormValues.firstName !== undefined
+            ? EditUserFormValues.firstName.trim()
+            : user.firstName;
+        user.lastName =
+          EditUserFormValues.lastName !== undefined
+            ? EditUserFormValues.lastName.trim()
+            : user.lastName;
+        user.email =
+          EditUserFormValues.email !== undefined
+            ? EditUserFormValues.email.trim()
+            : user.email;
+        user.countryCode =
+          EditUserFormValues.countryCode !== undefined
+            ? EditUserFormValues.countryCode.trim()
+            : user.countryCode;
+        user.phone =
+          EditUserFormValues.phone !== undefined
+            ? EditUserFormValues.phone.trim()
+            : user.phone;
+        user.username =
+          EditUserFormValues.username !== undefined
+            ? EditUserFormValues.username.trim()
+            : user.username;
+        user.birthDate = EditUserFormValues.birthDate || user.birthDate;
+        user.profilePicture =
+          EditUserFormValues.profilePicture || user.profilePicture;
+
+        const updatedUser = await user.save();
+
+        res.status(200).json({ message: "User updated", user: updatedUser });
       } else {
         res.status(404).json({ message: "User not found" });
       }

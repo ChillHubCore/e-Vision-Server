@@ -27,6 +27,7 @@ resumeRouter.post(
       workExperience,
       active,
       hobbies,
+      socials,
     } = req.body.values;
 
     const resume = new Resume({
@@ -42,6 +43,7 @@ resumeRouter.post(
       workExperience,
       active,
       hobbies,
+      socials,
     });
 
     try {
@@ -89,6 +91,7 @@ resumeRouter.put(
         resume.workExperience =
           req.body.values.workExperience || resume.workExperience;
         resume.hobbies = req.body.values.hobbies || resume.hobbies;
+        resume.socials = req.body.values.socials || resume.socials;
 
         const updatedResume = await resume.save();
         res.status(200).send(updatedResume);

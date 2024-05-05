@@ -99,6 +99,7 @@ const appSchema = new mongoose.Schema(
             type: Boolean,
             required: true,
           },
+          _id: false,
         },
       ],
     },

@@ -2,6 +2,7 @@ import express from "express";
 import expressAsyncHandler from "express-async-handler";
 import { isAuth, isCreator, isTeamMember } from "../utils.js";
 import Blog from "../models/blogModel.js";
+import User from "../models/userModel.js";
 
 const blogRouter = express.Router();
 
@@ -17,6 +18,7 @@ blogRouter.get(
       title,
       timeCreatedGTE,
       timeCreatedLTE,
+      author,
     } = req.query;
     const searchQuery = {};
 
@@ -37,6 +39,10 @@ blogRouter.get(
     }
     if (slug) {
       searchQuery.slug = slug;
+    }
+    if (author) {
+      const authorData = await User.findOne({ username: author });
+      searchQuery.author = authorData._id;
     }
     const pageSize = limit ? Number(limit) : 30;
     const skip = (pageNumber - 1) * pageSize;

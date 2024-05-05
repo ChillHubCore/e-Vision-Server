@@ -23,6 +23,7 @@ const promotionSchema = new mongoose.Schema(
           type: Number,
           required: true,
         },
+        _id: false,
       },
     ],
     creator: {

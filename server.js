@@ -20,6 +20,7 @@ import blogRouter from "./routes/blogRoutes.js";
 import promotionRoutes from "./routes/promotionRoutes.js";
 import ticketRoutes from "./routes/ticketRoutes.js";
 import resumeRouter from "./routes/resumeRoutes.js";
+import emailRouter from "./routes/emailRoutes.js";
 
 console.log("Running " + process.env.SERVER_NAME);
 
@@ -70,6 +71,7 @@ app.use("/blog", blogRouter);
 app.use("/promotion", promotionRoutes);
 app.use("/ticket", ticketRoutes);
 app.use("/resume", resumeRouter);
+app.use("/email", emailRouter);
 
 const fallbackPort = 5000;
 

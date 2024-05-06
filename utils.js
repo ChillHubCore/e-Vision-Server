@@ -1,5 +1,11 @@
 import jwt from "jsonwebtoken";
 import process from "process";
+import crypto from "crypto";
+import dotenv from "dotenv";
+
+dotenv.config();
+
+const key = process.env.MESSAGE_ENCRYPTION_KEY;
 
 export const generateToken = (user) => {
   return jwt.sign(
@@ -98,3 +104,22 @@ export const isTeamMember = (req, res, next) => {
     res.status(401).send({ message: "You Are Not a Team Member!" });
   }
 };
+
+export function encryptMessage(message) {
+  const iv = crypto.randomBytes(16);
+  const cipher = crypto.createCipheriv("aes-256-cbc", key, iv);
+  let encrypted = cipher.update(message, "utf8", "hex");
+  encrypted += cipher.final("hex");
+  return iv.toString("hex") + ":" + encrypted;
+}
+
+// Function to decrypt a message
+export function decryptMessage(encrypted) {
+  const parts = encrypted.split(":");
+  const iv = Buffer.from(parts.shift(), "hex");
+  const cipherText = Buffer.from(parts.join(":"), "hex");
+  const decipher = crypto.createDecipheriv("aes-256-cbc", key, iv);
+  let decrypted = decipher.update(cipherText, "hex", "utf8");
+  decrypted += decipher.final("utf8");
+  return decrypted;
+}

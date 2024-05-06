@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const messageSchema = new mongoose.Schema(
+const emailSchema = new mongoose.Schema(
   {
     sender: {
       type: mongoose.Schema.Types.ObjectId,
@@ -12,6 +12,11 @@ const messageSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    title: {
+      type: String,
+      required: true,
+      maxlength: 100,
+    },
     content: {
       type: String,
       required: true,
@@ -20,10 +25,16 @@ const messageSchema = new mongoose.Schema(
     attachments: {
       type: [String],
     },
+    readFlag: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,
   },
 );
 
-const Message = mongoose.model("Message", messageSchema);
+const Email = mongoose.model("Email", emailSchema);
+
+export default Email;

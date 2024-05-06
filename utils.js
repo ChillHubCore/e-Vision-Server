@@ -5,8 +5,6 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const key = process.env.MESSAGE_ENCRYPTION_KEY;
-
 export const generateToken = (user) => {
   return jwt.sign(
     {
@@ -105,7 +103,10 @@ export const isTeamMember = (req, res, next) => {
   }
 };
 
+const key = process.env.MESSAGE_ENCRYPTION_KEY;
+
 export function encryptMessage(message) {
+  console.log(key.length)
   const iv = crypto.randomBytes(16);
   const cipher = crypto.createCipheriv("aes-256-cbc", key, iv);
   let encrypted = cipher.update(message, "utf8", "hex");

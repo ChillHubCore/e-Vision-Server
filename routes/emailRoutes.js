@@ -17,7 +17,7 @@ emailRouter.get(
   expressAsyncHandler(async (req, res) => {
     const {
       sentFlag,
-      recivedFlag,
+      receivedFlag,
       title,
       username,
       timeCreatedGTE,
@@ -29,12 +29,7 @@ emailRouter.get(
       desc = "false",
     } = req.query;
     const searchQuery = {};
-    if (username !== undefined && username.trim() !== "") {
-      const senderProfile = await User.findOne({ username }).select(
-        "-password",
-      );
-      searchQuery.sender = senderProfile._id;
-    }
+
     if (title !== undefined && title.trim() !== "") {
       searchQuery.title = { $regex: title, $options: "i" };
     }
@@ -47,12 +42,15 @@ emailRouter.get(
     if (readOnly !== undefined && readOnly === "true") {
       searchQuery.readFlag = true;
     }
-    if (unreadOnly !== undefined && unreadOnly === "true") {
+    if (unreadOnly !== undefined && readOnly === "false") {
       searchQuery.readFlag = false;
     }
 
     if (sentFlag !== undefined && sentFlag === "true") {
       try {
+        if (username !== undefined && username.trim() !== "") {
+          searchQuery.receiverUsername = { $regex: username, $options: "i" };
+        }
         const totalEmails = await Email.countDocuments({
           sender: req.user._id,
           ...searchQuery,
@@ -69,11 +67,14 @@ emailRouter.get(
           .limit(pageSize)
           .skip(skip);
 
-        res.json(myEmails);
+        res.json({ emails: myEmails, length: totalEmails });
       } catch {
         res.status(404).json({ message: "Emails not found" });
       }
-    } else if (recivedFlag !== undefined && recivedFlag === "true") {
+    } else if (receivedFlag !== undefined && receivedFlag === "true") {
+      if (username !== undefined && username.trim() !== "") {
+        searchQuery.senderUsername = { $regex: username, $options: "i" };
+      }
       try {
         const totalEmails = await Email.countDocuments({
           receiver: req.user._id,
@@ -91,11 +92,17 @@ emailRouter.get(
           .limit(pageSize)
           .skip(skip);
 
-        res.json(myEmails);
+        res.json({ emails: myEmails, length: totalEmails });
       } catch {
         res.status(404).json({ message: "Emails not found" });
       }
     } else {
+      if (username !== undefined && username.trim() !== "") {
+        searchQuery.$or = [
+          { senderUsername: { $regex: username, $options: "i" } },
+          { receiverUsername: { $regex: username, $options: "i" } },
+        ];
+      }
       try {
         const totalEmails = await Email.countDocuments({
           $or: [{ sender: req.user._id }, { receiver: req.user._id }],
@@ -114,7 +121,7 @@ emailRouter.get(
           .limit(pageSize)
           .skip(skip);
 
-        res.json(myEmails);
+        res.json({ emails: myEmails, length: totalEmails });
       } catch {
         res.status(404).json({ message: "Emails not found" });
       }
@@ -127,13 +134,16 @@ emailRouter.post(
   isAuth,
   isTeamMember,
   expressAsyncHandler(async (req, res) => {
+    console.log(req.body.values);
     const { receiver, content, title, attachments } = req.body.values;
-    const reciverUser = await User.findOne({ username: receiver });
+    const receiverUser = await User.findOne({ username: receiver });
     const cryptoMessage = encryptMessage(content);
-    if (reciverUser) {
+    if (receiverUser) {
       const email = new Email({
         sender: req.user._id,
-        receiver: reciverUser._id,
+        senderUsername: req.user.username,
+        receiver: receiverUser._id,
+        receiverUsername: receiverUser.username,
         content: cryptoMessage,
         title,
         attachments,
@@ -141,7 +151,7 @@ emailRouter.post(
       const createdEmail = await email.save();
       res.status(201).json(createdEmail);
     } else {
-      res.status(404).json({ message: "Reciver not found" });
+      res.status(404).json({ message: "Receiver not found" });
     }
   }),
 );

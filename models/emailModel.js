@@ -37,6 +37,10 @@ const emailSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    EncryptionKeyVersion: {
+      type: Number,
+      required: true,
+    },
   },
   {
     timestamps: true,

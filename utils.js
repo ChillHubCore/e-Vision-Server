@@ -103,10 +103,9 @@ export const isTeamMember = (req, res, next) => {
   }
 };
 
-const key = process.env.MESSAGE_ENCRYPTION_KEY;
+const key = process.env.MESSAGE_ENCRYPTION_KEY_1;
 
 export function encryptMessage(message) {
-  console.log(key.length)
   const iv = crypto.randomBytes(16);
   const cipher = crypto.createCipheriv("aes-256-cbc", key, iv);
   let encrypted = cipher.update(message, "utf8", "hex");

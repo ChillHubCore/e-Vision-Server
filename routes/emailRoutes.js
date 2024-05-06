@@ -45,8 +45,8 @@ emailRouter.get(
     if (unreadOnly !== undefined && readOnly === "false") {
       searchQuery.readFlag = false;
     }
-
-    if (sentFlag !== undefined && sentFlag === "true") {
+    
+    if (sentFlag === "true" && receivedFlag === "false") {
       try {
         if (username !== undefined && username.trim() !== "") {
           searchQuery.receiverUsername = { $regex: username, $options: "i" };
@@ -62,16 +62,18 @@ emailRouter.get(
           sender: req.user._id,
           ...searchQuery,
         })
+          .populate("sender", "username _id")
           .populate("receiver", "username _id")
           .sort({ createdAt: desc === "true" ? -1 : 1 })
           .limit(pageSize)
           .skip(skip);
 
         res.json({ emails: myEmails, length: totalEmails });
-      } catch {
+      } catch (err) {
+        console.log(err);
         res.status(404).json({ message: "Emails not found" });
       }
-    } else if (receivedFlag !== undefined && receivedFlag === "true") {
+    } else if (receivedFlag === "true" && sentFlag === "false") {
       if (username !== undefined && username.trim() !== "") {
         searchQuery.senderUsername = { $regex: username, $options: "i" };
       }
@@ -88,12 +90,14 @@ emailRouter.get(
           ...searchQuery,
         })
           .populate("sender", "username _id")
+          .populate("receiver", "username _id")
           .sort({ createdAt: desc === "true" ? -1 : 1 })
           .limit(pageSize)
           .skip(skip);
 
         res.json({ emails: myEmails, length: totalEmails });
-      } catch {
+      } catch (err) {
+        console.log(err);
         res.status(404).json({ message: "Emails not found" });
       }
     } else {
@@ -122,7 +126,8 @@ emailRouter.get(
           .skip(skip);
 
         res.json({ emails: myEmails, length: totalEmails });
-      } catch {
+      } catch (err) {
+        console.log(err);
         res.status(404).json({ message: "Emails not found" });
       }
     }
@@ -134,10 +139,10 @@ emailRouter.post(
   isAuth,
   isTeamMember,
   expressAsyncHandler(async (req, res) => {
-    console.log(req.body.values);
     const { receiver, content, title, attachments } = req.body.values;
     const receiverUser = await User.findOne({ username: receiver });
     const cryptoMessage = encryptMessage(content);
+    const EncryptionKeyVersion = process.env.MESSAGE_ENCRYPTION_KEY_VERSION;
     if (receiverUser) {
       const email = new Email({
         sender: req.user._id,
@@ -147,8 +152,17 @@ emailRouter.post(
         content: cryptoMessage,
         title,
         attachments,
+        EncryptionKeyVersion,
       });
-      const createdEmail = await email.save();
+      try {
+        const createdEmail = await email.save();
+        res.status(201).json(createdEmail);
+      } catch (err) {
+        console.log(err);
+        res
+          .status(404)
+          .json({ message: "Something Went Wrong When Creating The Email" });
+      }
       res.status(201).json(createdEmail);
     } else {
       res.status(404).json({ message: "Receiver not found" });

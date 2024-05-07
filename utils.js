@@ -2,6 +2,7 @@ import jwt from "jsonwebtoken";
 import process from "process";
 import crypto from "crypto";
 import dotenv from "dotenv";
+import { EncryptionKeys } from "./vault/index.js";
 
 dotenv.config();
 
@@ -103,9 +104,12 @@ export const isTeamMember = (req, res, next) => {
   }
 };
 
-const key = process.env.MESSAGE_ENCRYPTION_KEY_1;
-
 export function encryptMessage(message) {
+  const key = EncryptionKeys.reduce((prevKey, currKey) => {
+    return currKey.keyVersion > prevKey.keyVersion
+      ? currKey.encryptionKey
+      : prevKey;
+  }, EncryptionKeys[0].encryptionKey);
   const iv = crypto.randomBytes(16);
   const cipher = crypto.createCipheriv("aes-256-cbc", key, iv);
   let encrypted = cipher.update(message, "utf8", "hex");
@@ -114,7 +118,10 @@ export function encryptMessage(message) {
 }
 
 // Function to decrypt a message
-export function decryptMessage(encrypted) {
+export function decryptMessage(encrypted, encryptionKeyVersion) {
+  const key = EncryptionKeys.find(
+    (key) => key.keyVersion === encryptionKeyVersion,
+  ).encryptionKey;
   const parts = encrypted.split(":");
   const iv = Buffer.from(parts.shift(), "hex");
   const cipherText = Buffer.from(parts.join(":"), "hex");

@@ -8,6 +8,7 @@ import {
 } from "../utils.js";
 import Email from "../models/emailModel.js";
 import User from "../models/userModel.js";
+import { EncryptionKeys } from "../vault/index.js";
 
 const emailRouter = express.Router();
 
@@ -39,13 +40,13 @@ emailRouter.get(
     if (timeCreatedLTE !== undefined && timeCreatedLTE.trim() !== "") {
       searchQuery.createdAt = { $lte: new Date(timeCreatedLTE) };
     }
-    if (readOnly !== undefined && readOnly === "true") {
+    if (readOnly === "true") {
       searchQuery.readFlag = true;
     }
-    if (unreadOnly !== undefined && readOnly === "false") {
+    if (unreadOnly === "true") {
       searchQuery.readFlag = false;
     }
-    
+
     if (sentFlag === "true" && receivedFlag === "false") {
       try {
         if (username !== undefined && username.trim() !== "") {
@@ -62,11 +63,12 @@ emailRouter.get(
           sender: req.user._id,
           ...searchQuery,
         })
+          .skip(skip)
+          .limit(pageSize)
           .populate("sender", "username _id")
           .populate("receiver", "username _id")
           .sort({ createdAt: desc === "true" ? -1 : 1 })
-          .limit(pageSize)
-          .skip(skip);
+          .select("-content");
 
         res.json({ emails: myEmails, length: totalEmails });
       } catch (err) {
@@ -89,11 +91,12 @@ emailRouter.get(
           receiver: req.user._id,
           ...searchQuery,
         })
+          .skip(skip)
+          .limit(pageSize)
           .populate("sender", "username _id")
           .populate("receiver", "username _id")
           .sort({ createdAt: desc === "true" ? -1 : 1 })
-          .limit(pageSize)
-          .skip(skip);
+          .select("-content");
 
         res.json({ emails: myEmails, length: totalEmails });
       } catch (err) {
@@ -119,11 +122,12 @@ emailRouter.get(
           $or: [{ sender: req.user._id }, { receiver: req.user._id }],
           ...searchQuery,
         })
+          .skip(skip)
+          .limit(pageSize)
           .populate("sender", "username _id")
           .populate("receiver", "username _id")
           .sort({ createdAt: desc === "true" ? -1 : 1 })
-          .limit(pageSize)
-          .skip(skip);
+          .select("-content");
 
         res.json({ emails: myEmails, length: totalEmails });
       } catch (err) {
@@ -141,8 +145,10 @@ emailRouter.post(
   expressAsyncHandler(async (req, res) => {
     const { receiver, content, title, attachments } = req.body.values;
     const receiverUser = await User.findOne({ username: receiver });
+    const EncryptionKeyVersion = Math.max(
+      ...EncryptionKeys.map((key) => key.keyVersion),
+    );
     const cryptoMessage = encryptMessage(content);
-    const EncryptionKeyVersion = process.env.MESSAGE_ENCRYPTION_KEY_VERSION;
     if (receiverUser) {
       const email = new Email({
         sender: req.user._id,
@@ -163,9 +169,47 @@ emailRouter.post(
           .status(404)
           .json({ message: "Something Went Wrong When Creating The Email" });
       }
-      res.status(201).json(createdEmail);
     } else {
       res.status(404).json({ message: "Receiver not found" });
+    }
+  }),
+);
+
+emailRouter.get(
+  "/:id",
+  isAuth,
+  expressAsyncHandler(async (req, res) => {
+    try {
+      const email = await Email.findById(req.params.id);
+      const EncryptionKeyVersion = Math.max(
+        ...EncryptionKeys.map((key) => key.keyVersion),
+      );
+      if (email) {
+        if (
+          email.receiver.toString() === req.user._id.toString() ||
+          email.sender.toString() === req.user._id.toString() ||
+          req.user.isAdmin
+        ) {
+          const decryptedEmail = decryptMessage(
+            email.content,
+            EncryptionKeyVersion,
+          );
+          if (email.receiver.toString() === req.user._id.toString()) {
+            email.readFlag = true;
+            await email.save();
+          }
+          res.json({ ...email._doc, content: decryptedEmail });
+        } else {
+          res
+            .status(404)
+            .json({ message: "You are not authorized to view this email!" });
+        }
+      } else {
+        res.status(404).json({ message: "Email not found" });
+      }
+    } catch (err) {
+      console.log(err);
+      res.status(404).json({ message: "Internal Server Error!" });
     }
   }),
 );

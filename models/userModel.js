@@ -93,7 +93,6 @@ const userSchema = new mongoose.Schema(
     isPhoneVerified: { type: Boolean, required: true, default: false },
     isCreator: { type: Boolean, default: false, required: true },
     isAdmin: { type: Boolean, default: false, required: true },
-    isTeamMember: { type: Boolean, default: false, required: true },
     role: {
       type: {
         label: String,

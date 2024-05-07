@@ -41,7 +41,11 @@ mongoose
   });
 
 const app = express();
+const numberOfProxies = process.env.NUMBER_OF_PROXIES;
 
+app.set('trust proxy', numberOfProxies)
+app.get('/ip', (request, response) => response.send(request.ip))
+app.get('/x-forwarded-for', (request, response) => response.send(request.headers['x-forwarded-for']))
 app.use(limiter);
 app.use(corsMiddleware);
 // app.use(authenticateMiddleware); // Based on Your Need choose cors or authenticateMiddleware (apiKey & apiSecret) or use both if needed!

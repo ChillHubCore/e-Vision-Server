@@ -514,6 +514,7 @@ userRouter.get(
   "/mine/profile",
   isAuth,
   expressAsyncHandler(async (req, res) => {
+    console.log(req);
     try {
       const user = await User.findById(req.user._id).select("-password");
       if (user) {

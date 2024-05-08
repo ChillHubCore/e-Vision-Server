@@ -58,6 +58,20 @@ export const isAuth = (req, res, next) => {
   }
 };
 
+export const socket_isAuth = (socket, next) => {
+  try {
+    const token = socket.handshake.query.token;
+    if (!token) {
+      throw new Error("No token provided");
+    }
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    socket.user = decoded;
+    next();
+  } catch (error) {
+    next(new Error("Authentication error"));
+  }
+};
+
 /**
  * Checks if the user is an admin.
  * @param {Object} req - The request object.

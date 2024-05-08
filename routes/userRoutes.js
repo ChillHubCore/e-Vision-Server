@@ -9,7 +9,6 @@ import {
   passwordValidator,
 } from "../validators/userValidators.js";
 import Session from "../models/sessionModel.js";
-import geoip from "geoip-lite";
 
 dotenv.config();
 
@@ -341,20 +340,12 @@ userRouter.post(
 
       if (user) {
         if (bcrypt.compareSync(SigninFormValues.password, user.password)) {
-          const ip =
-            req.ip ||
-            req.headers["x-forwarded-for"] ||
-            req.connection.remoteAddress;
-          const geo = geoip.lookup(ip);
           const newSession = new Session({
             user: user._id,
             ip: req.ip,
             forwardedFor: req.headers["x-forwarded-for"] || "no proxy",
             origin: req.headers.origin,
             userAgent: req.headers["user-agent"],
-            location: geo
-              ? `${geo.city}, ${geo.region}, ${geo.country}`
-              : "Location not found",
           });
 
           await newSession.save();
@@ -405,20 +396,12 @@ userRouter.post(
       });
       const user = await newUser.save();
 
-      const ip =
-        req.ip ||
-        req.headers["x-forwarded-for"] ||
-        req.connection.remoteAddress;
-      const geo = geoip.lookup(ip);
       const newSession = new Session({
         user: user._id,
         ip: req.ip,
         forwardedFor: req.headers["x-forwarded-for"] || "no proxy",
         origin: req.headers.origin,
         userAgent: req.headers["user-agent"],
-        location: geo
-          ? `${geo.city}, ${geo.region}, ${geo.country}`
-          : "Location not found",
       });
 
       await newSession.save();

@@ -411,6 +411,35 @@ userRouter.get("/check/creator", isAuth, isCreator, (req, res) => {
   res.send(true);
 });
 
+userRouter.get(
+  "/check/integrity",
+  isAuth,
+  expressAsyncHandler(async (req, res) => {
+    try {
+      const userData = await User.findById(req.user._id);
+      if (
+        userData._id.toString() === req.user._id &&
+        userData.username === req.user.username &&
+        userData.email === req.user.email &&
+        userData.firstName === req.user.firstName &&
+        userData.lastName === req.user.lastName &&
+        userData.isAdmin === req.user.isAdmin &&
+        userData.isCreator === req.user.isCreator &&
+        userData.isEmailVerified === req.user.isEmailVerified &&
+        userData.isPhoneVerified === req.user.isPhoneVerified &&
+        userData.role.value === req.user.role.value &&
+        userData.role.label === req.user.role.label
+      ) {
+        res.status(200).send(true);
+      } else {
+        res.status(401).send(false);
+      }
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  }),
+);
+
 userRouter.post(
   "/:id/status",
   isAuth,

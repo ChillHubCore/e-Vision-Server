@@ -43,7 +43,7 @@ mongoose
 const app = express();
 const numberOfProxies = process.env.NUMBER_OF_PROXIES;
 
-app.set("trust proxy", numberOfProxies);
+// app.set("trust proxy", numberOfProxies);
 app.get("/ip", (request, response) => response.send(request.ip));
 app.get("/x-forwarded-for", (request, response) =>
   response.send(request.headers["x-forwarded-for"]),

@@ -8,6 +8,8 @@ import {
   emailValidator,
   passwordValidator,
 } from "../validators/userValidators.js";
+import Session from "../models/sessionModel.js";
+import geoip from "geoip-lite";
 
 dotenv.config();
 
@@ -339,6 +341,24 @@ userRouter.post(
 
       if (user) {
         if (bcrypt.compareSync(SigninFormValues.password, user.password)) {
+          const ip =
+            req.ip ||
+            req.headers["x-forwarded-for"] ||
+            req.connection.remoteAddress;
+          const geo = geoip.lookup(ip);
+          const newSession = new Session({
+            user: user._id,
+            ip: req.ip,
+            forwardedFor: req.headers["x-forwarded-for"] || "no proxy",
+            origin: req.headers.origin,
+            userAgent: req.headers["user-agent"],
+            location: geo
+              ? `${geo.city}, ${geo.region}, ${geo.country}`
+              : "Location not found",
+          });
+
+          await newSession.save();
+
           res.status(201).json({
             username: user.username,
             isCreator: user.isCreator,
@@ -384,6 +404,25 @@ userRouter.post(
         password: bcrypt.hashSync(SignupFormValues.password),
       });
       const user = await newUser.save();
+
+      const ip =
+        req.ip ||
+        req.headers["x-forwarded-for"] ||
+        req.connection.remoteAddress;
+      const geo = geoip.lookup(ip);
+      const newSession = new Session({
+        user: user._id,
+        ip: req.ip,
+        forwardedFor: req.headers["x-forwarded-for"] || "no proxy",
+        origin: req.headers.origin,
+        userAgent: req.headers["user-agent"],
+        location: geo
+          ? `${geo.city}, ${geo.region}, ${geo.country}`
+          : "Location not found",
+      });
+
+      await newSession.save();
+
       res.status(201).json({
         username: user.username,
         isCreator: user.isCreator,
@@ -514,7 +553,8 @@ userRouter.get(
   "/mine/profile",
   isAuth,
   expressAsyncHandler(async (req, res) => {
-    console.log(req);
+    console.log(req.headers["user-agent"]);
+    console.log(req.headers.origin);
     try {
       const user = await User.findById(req.user._id).select("-password");
       if (user) {

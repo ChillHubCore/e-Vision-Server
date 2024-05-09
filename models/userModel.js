@@ -68,6 +68,22 @@ const userSchema = new mongoose.Schema(
         message: "Invalid email format.",
       },
     },
+    telegramInfo: {
+      type: {
+        chatId: {
+          type: Number,
+          unique: true,
+        },
+        chatUsername: {
+          type: String,
+        },
+        verified: {
+          type: Boolean,
+          default: false,
+        },
+        _id: false,
+      },
+    },
     countryCode: {
       type: String,
       required: true,

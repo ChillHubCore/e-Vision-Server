@@ -9,6 +9,8 @@ import {
   passwordValidator,
 } from "../validators/userValidators.js";
 import Session from "../models/sessionModel.js";
+import TelegramBot from "node-telegram-bot-api";
+import VerificationCode from "../models/verificationCodeModel.js";
 
 dotenv.config();
 
@@ -71,7 +73,7 @@ userRouter.put(
   isAuth,
   isAdmin,
   expressAsyncHandler(async (req, res) => {
-    const user = await User.findById(req.params.id);
+    const user = await User.findById(req.params.id).select("-password");
     const EditUserFormValues = req.body.values;
 
     if (EditUserFormValues.password) {
@@ -468,7 +470,7 @@ userRouter.post(
   isAdmin,
   expressAsyncHandler(async (req, res) => {
     try {
-      const user = await User.findById(req.params.id);
+      const user = await User.findById(req.params.id).select("-password");
       const status = req.body.status;
       if (user) {
         user.status.push(status);
@@ -491,7 +493,7 @@ userRouter.put(
   isAdmin,
   expressAsyncHandler(async (req, res) => {
     try {
-      const user = await User.findById(req.params.id);
+      const user = await User.findById(req.params.id).select("-password");
       const status = req.body.status;
       if (user) {
         user.status.id(req.params.statusId).value = status.value;
@@ -515,7 +517,7 @@ userRouter.post(
   isAdmin,
   expressAsyncHandler(async (req, res) => {
     try {
-      const user = await User.findById(req.params.id);
+      const user = await User.findById(req.params.id).select("-password");
       const notification = req.body.notification;
       if (user) {
         user.notifications.push(notification);
@@ -536,8 +538,6 @@ userRouter.get(
   "/mine/profile",
   isAuth,
   expressAsyncHandler(async (req, res) => {
-    console.log(req.headers["user-agent"]);
-    console.log(req.headers.origin);
     try {
       const user = await User.findById(req.user._id).select("-password");
       if (user) {
@@ -556,12 +556,12 @@ userRouter.put(
   isAuth,
   expressAsyncHandler(async (req, res) => {
     try {
-      const user = await User.findById(req.user._id);
+      const user = await User.findById(req.user._id).select("-password");
       const EditUserFormValues = req.body.values;
 
       if (user) {
         if (
-          EditUserFormValues.password ||
+          EditUserFormValues.password !== undefined &&
           EditUserFormValues.password.trim() !== ""
         ) {
           const validatePassword = passwordValidator.parse(
@@ -609,6 +609,121 @@ userRouter.put(
       }
     } catch (error) {
       res.status(500).json({ message: error.message });
+    }
+  }),
+);
+
+userRouter.put(
+  "/update/telegram",
+  isAuth,
+  expressAsyncHandler(async (req, res) => {
+    const { chatUsername } = req.body.values;
+    try {
+      const user = await User.findById(req.user._id);
+      if (user) {
+        user.telegramInfo = {
+          chatUsername: chatUsername,
+          verified: false,
+        };
+        await user.save();
+        res.status(200).json({ message: "Telegram username saved" });
+      } else {
+        res.status(404).json({ message: "User not found" });
+      }
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  }),
+);
+
+userRouter.get(
+  "/verify/telegram",
+  isAuth,
+  expressAsyncHandler(async (req, res) => {
+    try {
+      const user = await User.findById(req.user._id);
+      if (user) {
+        if (user.telegramInfo) {
+          if (user.telegramInfo.verified === true) {
+            res.status(200).json({ message: "Telegram already verified" });
+          } else {
+            //logic
+            const checkForExistingCode = await VerificationCode.findOne({
+              user: user._id,
+              platform: "telegram",
+            });
+
+            if (checkForExistingCode) {
+              res.status(200).json({
+                message:
+                  "a Code has Already Been generated wait 3 Minutes and Try Again!",
+              });
+            } else {
+              const validationToken =
+                "tg-" + Math.random().toString(36).substring(2, 10);
+
+              const ValidationCode = new VerificationCode({
+                user: user._id,
+                platform: "telegram",
+                code: validationToken,
+              });
+
+              await ValidationCode.save();
+
+              res.status(200).json({ message: validationToken });
+            }
+          }
+        } else {
+          res
+            .status(404)
+            .json({ message: "Telegram username has not been set Yet!" });
+        }
+      } else {
+        res.status(404).json({ message: "User not found" });
+      }
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  }),
+);
+
+const bot = new TelegramBot(process.env.TELEGRAM_BOT_API, { polling: true });
+
+bot.on(
+  "message",
+  expressAsyncHandler(async (msg) => {
+    const chatId = msg.chat.id;
+    const chatUsername = msg.chat.username;
+    const chatText = msg.text;
+    if (chatText.startsWith("tg-") && chatText.length === 11) {
+      try {
+        const user = await User.findOne({
+          telegramInfo: {
+            chatUsername: chatUsername,
+          },
+        });
+        if (user && user.telegramInfo.verified === false) {
+          const ValidationCodeCheck = await VerificationCode.findOne({
+            user: user._id,
+            code: chatText,
+            platform: "telegram",
+          });
+          if (ValidationCodeCheck) {
+            user.telegramInfo = {
+              chatId,
+              chatUsername,
+              verified: true,
+            };
+
+            await user.save();
+            bot.sendMessage(chatId, "Telegram Verified Successfully!");
+          } else {
+            bot.sendMessage(chatId, "Invalid Code!");
+          }
+        }
+      } catch (error) {
+        console.log(error);
+      }
     }
   }),
 );

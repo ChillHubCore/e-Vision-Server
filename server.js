@@ -80,7 +80,7 @@ app.use("/ticket", ticketRoutes);
 app.use("/resume", resumeRouter);
 app.use("/email", emailRouter);
 
-telegramBot();
+// telegramBot();
 
 const fallbackPort = 5000;
 

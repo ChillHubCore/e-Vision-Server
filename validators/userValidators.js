@@ -12,3 +12,7 @@ export const phoneValidator = z
   .string()
   .min(10, "Invalid phone number")
   .refine((value) => /^\d+$/.test(value), "Invalid phone number");
+
+export const noWhitespaceValidator = z
+  .string()
+  .regex(/^\S+$/, "No whitespace allowed");

@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import {
   emailValidator,
+  noWhitespaceValidator,
   phoneValidator,
 } from "../validators/userValidators.js";
 
@@ -54,6 +55,12 @@ const userSchema = new mongoose.Schema(
       minLength: 3,
       maxLength: 255,
       unique: true,
+      validate: {
+        validator: function (value) {
+          return noWhitespaceValidator.safeParse(value).success;
+        },
+        message: "Invalid username format.",
+      },
     },
     email: {
       type: String,

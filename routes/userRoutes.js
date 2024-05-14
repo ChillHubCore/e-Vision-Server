@@ -2,7 +2,13 @@ import express from "express";
 import bcrypt from "bcryptjs";
 import expressAsyncHandler from "express-async-handler";
 import User from "../models/userModel.js";
-import { generateToken, isAdmin, isAuth, isCreator } from "../utils.js";
+import {
+  encryptMessage,
+  generateToken,
+  isAdmin,
+  isAuth,
+  isCreator,
+} from "../utils.js";
 import dotenv from "dotenv";
 import {
   emailValidator,
@@ -10,6 +16,8 @@ import {
 } from "../validators/userValidators.js";
 import Session from "../models/sessionModel.js";
 import VerificationCode from "../models/verificationCodeModel.js";
+import Email from "../models/emailModel.js";
+import { EncryptionKeys } from "../vault/index.js";
 
 dotenv.config();
 
@@ -20,50 +28,54 @@ userRouter.post(
   isAuth,
   isAdmin,
   expressAsyncHandler(async (req, res) => {
-    const CreateUserFormValues = req.body.values;
-    const validatePassword = passwordValidator.parse(
-      CreateUserFormValues.password,
-    );
+    try {
+      const CreateUserFormValues = req.body.values;
+      const validatePassword = passwordValidator.parse(
+        CreateUserFormValues.password,
+      );
 
-    if (!validatePassword)
-      return res.status(400).json({
-        message: validatePassword,
-      });
+      if (!validatePassword)
+        return res.status(400).json({
+          message: validatePassword,
+        });
 
-    const newUser = new User({
-      firstName: CreateUserFormValues.firstName.trim(),
-      lastName: CreateUserFormValues.lastName.trim(),
-      email: CreateUserFormValues.email.trim(),
-      birthDate: CreateUserFormValues.birthDate,
-      countryCode: CreateUserFormValues.countryCode.trim(),
-      phone: CreateUserFormValues.phone.trim(),
-      username: CreateUserFormValues.username.trim(),
-      isAdmin: CreateUserFormValues.isAdmin,
-      role: CreateUserFormValues.role,
-      isCreator: CreateUserFormValues.isCreator,
-      isEmailVerified: CreateUserFormValues.isEmailVerified,
-      isPhoneVerified: CreateUserFormValues.isPhoneVerified,
-      password: bcrypt.hashSync(CreateUserFormValues.password),
-    });
-    const user = await newUser.save();
-    res.status(201).json({
-      message: "User Created",
-      user: {
-        _id: user._id,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        email: user.email,
-        countryCode: user.countryCode,
+      const newUser = new User({
+        firstName: CreateUserFormValues.firstName.trim(),
+        lastName: CreateUserFormValues.lastName.trim(),
+        email: CreateUserFormValues.email.trim(),
         birthDate: CreateUserFormValues.birthDate,
-        phone: user.phone,
-        username: user.username,
-        isAdmin: user.isAdmin,
-        isCreator: user.isCreator,
-        isEmailVerified: user.isEmailVerified,
-        isPhoneVerified: user.isPhoneVerified,
-        role: user.role,
-      },
-    });
+        countryCode: CreateUserFormValues.countryCode.trim(),
+        phone: CreateUserFormValues.phone.trim(),
+        username: CreateUserFormValues.username.trim(),
+        isAdmin: CreateUserFormValues.isAdmin,
+        role: CreateUserFormValues.role,
+        isCreator: CreateUserFormValues.isCreator,
+        isEmailVerified: CreateUserFormValues.isEmailVerified,
+        isPhoneVerified: CreateUserFormValues.isPhoneVerified,
+        password: bcrypt.hashSync(CreateUserFormValues.password),
+      });
+      const user = await newUser.save();
+      res.status(201).json({
+        message: "User Created",
+        user: {
+          _id: user._id,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          countryCode: user.countryCode,
+          birthDate: CreateUserFormValues.birthDate,
+          phone: user.phone,
+          username: user.username,
+          isAdmin: user.isAdmin,
+          isCreator: user.isCreator,
+          isEmailVerified: user.isEmailVerified,
+          isPhoneVerified: user.isPhoneVerified,
+          role: user.role,
+        },
+      });
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
   }),
 );
 
@@ -72,82 +84,86 @@ userRouter.put(
   isAuth,
   isAdmin,
   expressAsyncHandler(async (req, res) => {
-    const user = await User.findById(req.params.id).select("-password");
-    const EditUserFormValues = req.body.values;
+    try {
+      const user = await User.findById(req.params.id).select("-password");
+      const EditUserFormValues = req.body.values;
 
-    if (EditUserFormValues.password) {
-      const validatePassword = passwordValidator.parse(
-        EditUserFormValues.password,
-      );
-      if (!validatePassword)
-        return res.status(400).json({
-          message: validatePassword,
-        });
-    }
-
-    if (user) {
-      user.firstName =
-        EditUserFormValues.firstName !== undefined
-          ? EditUserFormValues.firstName.trim()
-          : user.firstName;
-      user.lastName =
-        EditUserFormValues.lastName !== undefined
-          ? EditUserFormValues.lastName.trim()
-          : user.lastName;
-      user.email =
-        EditUserFormValues.email !== undefined
-          ? EditUserFormValues.email.trim()
-          : user.email;
-      user.countryCode =
-        EditUserFormValues.countryCode !== undefined
-          ? EditUserFormValues.countryCode.trim()
-          : user.countryCode;
-      user.phone =
-        EditUserFormValues.phone !== undefined
-          ? EditUserFormValues.phone.trim()
-          : user.phone;
-      user.username =
-        EditUserFormValues.username !== undefined
-          ? EditUserFormValues.username.trim()
-          : user.username;
-      user.isAdmin =
-        EditUserFormValues.isAdmin !== undefined
-          ? EditUserFormValues.isAdmin
-          : user.isAdmin;
-      user.isCreator =
-        EditUserFormValues.isCreator !== undefined
-          ? EditUserFormValues.isCreator
-          : user.isCreator;
-      user.isEmailVerified =
-        EditUserFormValues.isEmailVerified !== undefined
-          ? EditUserFormValues.isEmailVerified
-          : user.isEmailVerified;
-      user.isPhoneVerified =
-        EditUserFormValues.isPhoneVerified !== undefined
-          ? EditUserFormValues.isPhoneVerified
-          : user.isPhoneVerified;
-      user.role = EditUserFormValues.role || user.role;
-      user.loyaltyPoints =
-        EditUserFormValues.loyaltyPoints || user.loyaltyPoints;
-      user.shopTokenBalance =
-        EditUserFormValues.shopTokenBalance || user.shopTokenBalance;
-      user.birthDate = EditUserFormValues.birthDate || user.birthDate;
-      user.role = EditUserFormValues.role || user.role;
-      user.profilePicture =
-        EditUserFormValues.profilePicture || user.profilePicture;
-
-      if (
-        EditUserFormValues.password !== undefined &&
-        EditUserFormValues.password.trim() !== ""
-      ) {
-        user.password = bcrypt.hashSync(EditUserFormValues.password);
+      if (EditUserFormValues.password) {
+        const validatePassword = passwordValidator.parse(
+          EditUserFormValues.password,
+        );
+        if (!validatePassword)
+          return res.status(400).json({
+            message: validatePassword,
+          });
       }
 
-      const updatedUser = await user.save();
+      if (user) {
+        user.firstName =
+          EditUserFormValues.firstName !== undefined
+            ? EditUserFormValues.firstName.trim()
+            : user.firstName;
+        user.lastName =
+          EditUserFormValues.lastName !== undefined
+            ? EditUserFormValues.lastName.trim()
+            : user.lastName;
+        user.email =
+          EditUserFormValues.email !== undefined
+            ? EditUserFormValues.email.trim()
+            : user.email;
+        user.countryCode =
+          EditUserFormValues.countryCode !== undefined
+            ? EditUserFormValues.countryCode.trim()
+            : user.countryCode;
+        user.phone =
+          EditUserFormValues.phone !== undefined
+            ? EditUserFormValues.phone.trim()
+            : user.phone;
+        user.username =
+          EditUserFormValues.username !== undefined
+            ? EditUserFormValues.username.trim()
+            : user.username;
+        user.isAdmin =
+          EditUserFormValues.isAdmin !== undefined
+            ? EditUserFormValues.isAdmin
+            : user.isAdmin;
+        user.isCreator =
+          EditUserFormValues.isCreator !== undefined
+            ? EditUserFormValues.isCreator
+            : user.isCreator;
+        user.isEmailVerified =
+          EditUserFormValues.isEmailVerified !== undefined
+            ? EditUserFormValues.isEmailVerified
+            : user.isEmailVerified;
+        user.isPhoneVerified =
+          EditUserFormValues.isPhoneVerified !== undefined
+            ? EditUserFormValues.isPhoneVerified
+            : user.isPhoneVerified;
+        user.role = EditUserFormValues.role || user.role;
+        user.loyaltyPoints =
+          EditUserFormValues.loyaltyPoints || user.loyaltyPoints;
+        user.shopTokenBalance =
+          EditUserFormValues.shopTokenBalance || user.shopTokenBalance;
+        user.birthDate = EditUserFormValues.birthDate || user.birthDate;
+        user.role = EditUserFormValues.role || user.role;
+        user.profilePicture =
+          EditUserFormValues.profilePicture || user.profilePicture;
 
-      res.status(200).json({ message: "User updated", user: updatedUser });
-    } else {
-      res.status(404).json({ message: "User not found" });
+        if (
+          EditUserFormValues.password !== undefined &&
+          EditUserFormValues.password.trim() !== ""
+        ) {
+          user.password = bcrypt.hashSync(EditUserFormValues.password);
+        }
+
+        const updatedUser = await user.save();
+
+        res.status(200).json({ message: "User updated", user: updatedUser });
+      } else {
+        res.status(404).json({ message: "User not found" });
+      }
+    } catch (error) {
+      res.status(500).json({ message: error.message });
     }
   }),
 );
@@ -406,6 +422,29 @@ userRouter.post(
       });
 
       await newSession.save();
+
+      const EncryptionKeyVersion = Math.max(
+        ...EncryptionKeys.map((key) => key.keyVersion),
+      );
+      const content =
+        "Welcome to our platform, we are glad to have you here. Feel free to reach out to us if you have any questions or concerns. We are here to help you.";
+      const cryptoMessage = encryptMessage(content);
+
+      const chillhubUser = await User.findOne({
+        email: "chillhubnet@proton.me",
+      });
+
+      const email = new Email({
+        sender: chillhubUser._id,
+        senderUsername: chillhubUser.username,
+        receiver: user._id,
+        receiverUsername: user.username,
+        content: cryptoMessage,
+        title: "Welcome",
+        EncryptionKeyVersion,
+      });
+
+      await email.save();
 
       res.status(201).json({
         username: user.username,

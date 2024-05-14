@@ -14,7 +14,7 @@ export function telegramBot() {
   bot.on(
     "message",
     expressAsyncHandler(async (msg) => {
-      console.log(msg);
+      // console.log(msg);
       const chatId = msg.chat.id;
       const chatUsername = msg.chat.username;
       const chatText = msg.text;

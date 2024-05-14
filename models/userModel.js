@@ -72,7 +72,6 @@ const userSchema = new mongoose.Schema(
       type: {
         chatId: {
           type: Number,
-          unique: true,
         },
         chatUsername: {
           type: String,
@@ -83,6 +82,7 @@ const userSchema = new mongoose.Schema(
         },
         _id: false,
       },
+      required: false,
     },
     countryCode: {
       type: String,

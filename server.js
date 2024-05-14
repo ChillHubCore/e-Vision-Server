@@ -21,6 +21,7 @@ import promotionRoutes from "./routes/promotionRoutes.js";
 import ticketRoutes from "./routes/ticketRoutes.js";
 import resumeRouter from "./routes/resumeRoutes.js";
 import emailRouter from "./routes/emailRoutes.js";
+import { telegramBot } from "./sockets/telegramBot.js";
 
 console.log("Running " + process.env.SERVER_NAME);
 
@@ -78,6 +79,8 @@ app.use("/promotion", promotionRoutes);
 app.use("/ticket", ticketRoutes);
 app.use("/resume", resumeRouter);
 app.use("/email", emailRouter);
+
+telegramBot();
 
 const fallbackPort = 5000;
 

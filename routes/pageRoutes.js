@@ -64,32 +64,24 @@ pageRouter.get(
       const {
         title,
         slug,
-        keywords,
-        description,
-        active,
         timeCreatedGTE,
         timeCreatedLTE,
+        description,
         pageNumber = 1,
         limit,
         desc = "false",
       } = req.query;
       const searchQuery = {};
-      if (title !== undefined) {
-        searchQuery.title = title;
+      if (title) {
+        searchQuery.title = { $regex: title, $options: "i" };
       }
-      if (slug !== undefined) {
-        searchQuery.slug = slug;
+      if (slug) { 
+        searchQuery.slug = { $regex: slug, $options: "i" };
       }
-      if (keywords !== undefined) {
-        searchQuery.keywords = keywords;
+      if (description) { 
+        searchQuery.description = { $regex: description, $options: "i" };
       }
-      if (description !== undefined) {
-        searchQuery.description = description;
-      }
-      if (active !== undefined) {
-        searchQuery.active = active;
-      }
-      if (timeCreatedGTE !== undefined || timeCreatedLTE !== undefined) {
+      if (timeCreatedGTE || timeCreatedLTE) { 
         searchQuery.createdAt = {};
         if (timeCreatedGTE) {
           searchQuery.createdAt.$gte = new Date(timeCreatedGTE);

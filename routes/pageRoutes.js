@@ -10,7 +10,7 @@ pageRouter.post(
   isAuth,
   isAdmin,
   expressAsyncHandler(async (req, res) => {
-    const { title, slug, keywords, description, active } = req.body;
+    const { title, slug, keywords, description, active } = req.body.values;
     try {
       const page = new Page({
         title,
@@ -33,14 +33,16 @@ pageRouter.put(
   isAuth,
   isAdmin,
   expressAsyncHandler(async (req, res) => {
+    const { title, slug, keywords, description, active } = req.body.values;
+
     try {
       const page = await Page.findById(req.params.id);
       if (page) {
-        page.title = req.body.title || page.title;
-        page.slug = req.body.slug || page.slug;
-        page.keywords = req.body.keywords || page.keywords;
-        page.description = req.body.description || page.description;
-        page.active = req.body.active || page.active;
+        page.title = title || page.title;
+        page.slug = slug || page.slug;
+        page.keywords = keywords || page.keywords;
+        page.description = description || page.description;
+        page.active = active || page.active;
 
         const updatedPage = await page.save();
         res.send(updatedPage);

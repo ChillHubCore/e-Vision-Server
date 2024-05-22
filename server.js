@@ -23,6 +23,7 @@ import resumeRouter from "./routes/resumeRoutes.js";
 import emailRouter from "./routes/emailRoutes.js";
 import { telegramBot } from "./sockets/telegramBot.js";
 import pageRouter from "./routes/pageRoutes.js";
+import headerRouter from "./routes/headerRoutes.js";
 
 console.log("Running " + process.env.SERVER_NAME);
 
@@ -81,8 +82,9 @@ app.use("/ticket", ticketRoutes);
 app.use("/resume", resumeRouter);
 app.use("/email", emailRouter);
 app.use("/page", pageRouter);
+app.use("/header", headerRouter);
 
-telegramBot();
+// telegramBot();
 
 const fallbackPort = 5000;
 

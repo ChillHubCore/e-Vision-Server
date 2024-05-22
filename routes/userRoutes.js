@@ -387,6 +387,59 @@ userRouter.post(
 );
 
 userRouter.post(
+  "/editor/signin",
+  expressAsyncHandler(async (req, res) => {
+    /**
+     * Represents a user object.
+     * @typedef {Object} User
+     * @property {string} email - The email of the user.
+     * @property {string} password - The password of the user.
+     * use this endpoint to login a user and at the end send them back a auto generated hash token which last in a short period to keep them logged in
+     */
+
+    try {
+      const SigninFormValues = req.body;
+      const validateEmail = emailValidator.parse(SigninFormValues.email);
+
+      if (!validateEmail) {
+        return res.status(400).json({
+          message: validateEmail,
+        });
+      }
+      const user = await User.findOne({ email: SigninFormValues.email });
+
+      if ((user && user.isCreator) || user.isAdmin) {
+        if (bcrypt.compareSync(SigninFormValues.password, user.password)) {
+          const newSession = new Session({
+            user: user._id,
+            ip: req.ip,
+            forwardedFor: req.headers["x-forwarded-for"] || "no proxy",
+            origin: req.headers.origin,
+            userAgent: req.headers["user-agent"],
+          });
+
+          await newSession.save();
+
+          res.status(201).json({
+            username: user.username,
+            isCreator: user.isCreator,
+            isAdmin: user.isAdmin,
+            isEmailVerified: user.isEmailVerified,
+            isPhoneVerified: user.isPhoneVerified,
+            role: user.role,
+            token: generateToken(user),
+          });
+          return;
+        }
+      }
+      res.status(401).json({ message: "Email or Password is Wrong!" });
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  }),
+);
+
+userRouter.post(
   "/signup",
   expressAsyncHandler(async (req, res) => {
     try {

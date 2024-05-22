@@ -75,13 +75,13 @@ pageRouter.get(
       if (title) {
         searchQuery.title = { $regex: title, $options: "i" };
       }
-      if (slug) { 
+      if (slug) {
         searchQuery.slug = { $regex: slug, $options: "i" };
       }
-      if (description) { 
+      if (description) {
         searchQuery.description = { $regex: description, $options: "i" };
       }
-      if (timeCreatedGTE || timeCreatedLTE) { 
+      if (timeCreatedGTE || timeCreatedLTE) {
         searchQuery.createdAt = {};
         if (timeCreatedGTE) {
           searchQuery.createdAt.$gte = new Date(timeCreatedGTE);

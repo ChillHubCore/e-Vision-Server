@@ -1,6 +1,6 @@
 import express from "express";
 import expressAsyncHandler from "express-async-handler";
-import { isAdmin, isAuth } from "../utils.js";
+import { isAdmin, isAuth, isCreator } from "../utils.js";
 import dotenv from "dotenv";
 import App from "../models/appModel.js";
 import { appValidator } from "../validators/appValidators.js";

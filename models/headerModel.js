@@ -3,15 +3,17 @@ import mongoose from "mongoose";
 const headerSchema = new mongoose.Schema({
   title: { type: String, required: true, minLength: 3, maxLength: 255 },
   logo: { type: String },
-  titleClassName: {
-    type: String,
-    // minLength: 3,
-    maxLength: 255,
+  titleStyle: {
+    color: { type: String },
+    colorWeight: { type: String },
+    fontSize: { type: String },
+    fontWeight: { type: String },
+    cursor: { type: String },
   },
-  containerClassName: {
-    type: String,
-    // minLength: 3,
-    maxLength: 255,
+  backgroundStyle: {
+    color: { type: String },
+    colorWeight: { type: String },
+    isSticky: { type: Boolean },
   },
 });
 

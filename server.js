@@ -24,6 +24,7 @@ import emailRouter from "./routes/emailRoutes.js";
 import { telegramBot } from "./sockets/telegramBot.js";
 import pageRouter from "./routes/pageRoutes.js";
 import headerRouter from "./routes/headerRoutes.js";
+import footerRouter from "./routes/footerRoutes.js";
 
 console.log("Running " + process.env.SERVER_NAME);
 
@@ -83,6 +84,7 @@ app.use("/resume", resumeRouter);
 app.use("/email", emailRouter);
 app.use("/page", pageRouter);
 app.use("/header", headerRouter);
+app.use("/footer", footerRouter);
 
 // telegramBot();
 

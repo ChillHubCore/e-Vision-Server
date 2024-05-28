@@ -14,23 +14,22 @@ headerRouter.post(
   isCreator,
   expressAsyncHandler(async (req, res) => {
     try {
-      const { title, logo, titleClassName, containerClassName } = req.body;
+      const { title, logo, titleStyle, backgroundStyle } = req.body;
       const findHeader = await Header.findOne();
       if (findHeader) {
         if (title !== undefined) findHeader.title = title;
         if (logo !== undefined) findHeader.logo = logo;
-        if (titleClassName !== undefined)
-          findHeader.titleClassName = titleClassName;
-        if (containerClassName !== undefined)
-          findHeader.containerClassName = containerClassName;
+        if (titleStyle !== undefined) findHeader.titleStyle = titleStyle;
+        if (backgroundStyle !== undefined)
+          findHeader.backgroundStyle = backgroundStyle;
         const updatedHeader = await findHeader.save();
         res.send(updatedHeader);
       } else {
         const header = new Header({
           title,
           logo,
-          titleClassName,
-          containerClassName,
+          titleStyle,
+          backgroundStyle,
         });
         const createdHeader = await header.save();
         res.status(201).send(createdHeader);

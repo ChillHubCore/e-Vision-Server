@@ -10,20 +10,38 @@ pageRouter.post(
   isAuth,
   isAdmin,
   expressAsyncHandler(async (req, res) => {
-    const { title, slug, keywords, description, active } = req.body.values;
-    try {
-      const page = new Page({
-        title,
-        slug,
-        keywords,
-        description,
-        active,
-        creator: req.user._id,
-      });
-      const createdPage = await page.save();
-      res.status(201).send(createdPage);
-    } catch (error) {
-      res.status(400).send({ message: error.message });
+    if (req.body.values) {
+      const { title, slug, keywords, description, active } = req.body.values;
+      try {
+        const page = new Page({
+          title,
+          slug,
+          keywords,
+          description,
+          active,
+          creator: req.user._id,
+        });
+        const createdPage = await page.save();
+        res.status(201).send(createdPage);
+      } catch (error) {
+        res.status(400).send({ message: error.message });
+      }
+    } else {
+      const { title, slug, keywords, description, active } = req.body;
+      try {
+        const page = new Page({
+          title,
+          slug,
+          keywords,
+          description,
+          active,
+          creator: req.user._id,
+        });
+        const createdPage = await page.save();
+        res.status(201).send(createdPage);
+      } catch (error) {
+        res.status(400).send({ message: error.message });
+      }
     }
   }),
 );

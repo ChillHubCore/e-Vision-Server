@@ -14,21 +14,21 @@ footerRouter.post(
   isCreator,
   expressAsyncHandler(async (req, res) => {
     try {
-      const { title, titleClassName, containerClassName } = req.body;
+      const { title, titleStyle, backgroundStyle } = req.body;
       const findFooter = await Footer.findOne();
       if (findFooter) {
         if (title !== undefined) findFooter.title = title;
-        if (titleClassName !== undefined)
-          findFooter.titleClassName = titleClassName;
-        if (containerClassName !== undefined)
-          findFooter.containerClassName = containerClassName;
+        if (titleStyle !== undefined) findFooter.titleStyle = titleStyle;
+        if (backgroundStyle !== undefined)
+          findFooter.backgroundStyle = backgroundStyle;
+
         const updatedFooter = await findFooter.save();
         res.send(updatedFooter);
       } else {
         const footer = new Footer({
           title,
-          titleClassName,
-          containerClassName,
+          titleStyle,
+          backgroundStyle,
         });
         const createdFooter = await footer.save();
         res.status(201).send(createdFooter);

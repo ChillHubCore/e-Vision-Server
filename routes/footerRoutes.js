@@ -44,7 +44,10 @@ footerRouter.get(
   expressAsyncHandler(async (req, res) => {
     try {
       const footer = await Footer.findOne();
-      res.send(footer);
+      if (footer) {
+        res.send(footer);
+      }
+      res.send({});
     } catch (err) {
       res.status(500).send({ error: err });
     }

@@ -21,33 +21,32 @@ blogRouter.get(
       author,
     } = req.query;
     const searchQuery = {};
-
-    if (title) {
-      searchQuery.title = { $regex: title, $options: "i" };
-    }
-    if (timeCreatedGTE || timeCreatedLTE) {
-      searchQuery.createdAt = {};
-      if (timeCreatedGTE) {
-        searchQuery.createdAt.$gte = new Date(timeCreatedGTE);
-      }
-      if (timeCreatedLTE) {
-        searchQuery.createdAt.$lte = new Date(timeCreatedLTE);
-      }
-    }
-    if (id) {
-      searchQuery._id = id;
-    }
-    if (slug) {
-      searchQuery.slug = slug;
-    }
-    if (author) {
-      const authorData = await User.findOne({ username: author });
-      searchQuery.author = authorData._id;
-    }
-    const pageSize = limit ? Number(limit) : 30;
-    const skip = (pageNumber - 1) * pageSize;
-
     try {
+      if (title) {
+        searchQuery.title = { $regex: title, $options: "i" };
+      }
+      if (timeCreatedGTE || timeCreatedLTE) {
+        searchQuery.createdAt = {};
+        if (timeCreatedGTE) {
+          searchQuery.createdAt.$gte = new Date(timeCreatedGTE);
+        }
+        if (timeCreatedLTE) {
+          searchQuery.createdAt.$lte = new Date(timeCreatedLTE);
+        }
+      }
+      if (id) {
+        searchQuery._id = id;
+      }
+      if (slug) {
+        searchQuery.slug = slug;
+      }
+      if (author) {
+        const authorData = await User.findOne({ username: author });
+        searchQuery.author = authorData._id;
+      }
+      const pageSize = limit ? Number(limit) : 30;
+      const skip = (pageNumber - 1) * pageSize;
+
       const totalBlogs = await Blog.countDocuments(searchQuery);
       const blogs = await Blog.find(searchQuery)
         .populate("author", "username _id")

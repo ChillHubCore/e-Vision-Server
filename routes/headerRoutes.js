@@ -45,7 +45,10 @@ headerRouter.get(
   expressAsyncHandler(async (req, res) => {
     try {
       const header = await Header.findOne();
-      res.send(header);
+      if (header) {
+        res.send(header);
+      }
+      res.send({});
     } catch (err) {
       res.status(500).send({ error: err });
     }

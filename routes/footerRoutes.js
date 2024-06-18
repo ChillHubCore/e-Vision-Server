@@ -46,8 +46,9 @@ footerRouter.get(
       const footer = await Footer.findOne();
       if (footer) {
         res.send(footer);
+      } else {
+        res.send({});
       }
-      res.send({});
     } catch (err) {
       res.status(500).send({ error: err });
     }

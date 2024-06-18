@@ -47,8 +47,9 @@ headerRouter.get(
       const header = await Header.findOne();
       if (header) {
         res.send(header);
+      } else {
+        res.send({});
       }
-      res.send({});
     } catch (err) {
       res.status(500).send({ error: err });
     }

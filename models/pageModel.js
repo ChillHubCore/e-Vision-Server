@@ -11,6 +11,12 @@ const pageSchema = new mongoose.Schema(
       type: String,
       required: true,
       unique: true,
+      validate: {
+        validator: function (value) {
+          return noWhitespaceValidator.safeParse(value).success;
+        },
+        message: "Invalid slug format.",
+      },
     },
     keywords: {
       type: [String],
